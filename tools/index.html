@@ -1,0 +1,1446 @@
+
+  
+    <!DOCTYPE html>
+<html>
+<body>
+
+<script>
+
+</script>
+
+  <meta charset="UTF-8">
+
+  <form name="form1">
+    <h1 style="text-align:center">导线实用拉力计算程序 </h1>
+    <p style="text-align:center">版本号：V2 &nbsp;&nbsp;程序员：董建政  &nbsp;&nbsp;公司：福建省电力勘测设计院 &nbsp;&nbsp;copyright © 2016</p>
+    <p style="text-align:center">如果您在使用本产品时遇到问题，或者对我们有任何意见建议，欢迎致函：tjudong@163.com。</p>
+    <p>*********************************************************************************************************************************************************</p>
+    <p> 输入工作环境数据：</p>
+    <p> 最大荷载温度( ℃)： <input type="number" name="Tload" value="0" style="width:60px;height:15px">
+      最大风速温度( ℃)： <input type="number" name="TV" value="0" style="width:60px;height:15px">
+      最高工作温度( ℃)： <input type="number" name="TT" value="70" style="width:60px;height:15px">
+      检修高温( ℃)： <input type="number" name="Ttdgw" value="35" style="width:60px;height:15px">
+      检修低温( ℃)： <input type="number" name="Ttddw" value="0" style="width:60px;height:15px">
+      施工安装高温( ℃)： <input type="number" name="Tsggw" value="35" style="width:60px;height:15px">
+      施工安装低温( ℃)： <input type="number" name="Tsgdw" value="0" style="width:60px;height:15px">
+    </p>
+    <p>
+      覆冰厚度(mm)： <input type="number" name="b" min="0" value="0" style="width:60px;height:15px">
+      最大风速(m/s)： <input type="number" name="Vmax" min="0" value="35" style="width:60px;height:15px">
+      覆冰/检修/施工安装风速(m/s)： <input type="number" name="V" min="0" value="10" style="width:60px;height:15px">
+    </p>
+
+    <p> 输入导线属性数据：</p>
+    <p> 导线截面s(mm2)： <input type="number" name="s" min="0" value="333.31" style="width:60px;height:15px">
+      导线直径d(mm)： <input type="number" name="d" min="0" value="23.76" style="width:60px;height:15px">
+      弹性模量E(N/mm2)： <input type="number" name="E" min="0" value="65000" style="width:60px;height:15px">
+      温度线膨胀系数ax(1/℃)： <input type="number" name="a" min="0" value="20.5e-6" style="width:60px;height:15px">
+      导线自重q1(kg/m)： <input type="number" name="q1" min="0" value="1.058" style="width:60px;height:15px">
+    </p>
+
+    <p> 输入绝缘子属性数据：</p>
+    <p> 单个绝缘子长度(m)： <input type="number" name="L0" min="0" value="0.146" style="width:60px;height:15px">
+      单个绝缘子重量(kg)： <input type="number" name="Q01" min="0" value="5.0" style="width:60px;height:15px">
+      单个绝缘子等效直径(mm)： <input type="number" name="dQ0" min="0" value="32.0495" style="width:60px;height:15px">
+      单个绝缘子等效面积(m2)： <input type="number" name="AQ0" min="0" value="0.0173" style="width:60px;height:15px">
+      绝缘子个数： <input type="number" name="n" min="0" value="14" style="width:60px;height:15px">
+    </p>
+    <p>绝缘子金具重量(kg)： <input type="number" name="Gjj" min="0" value="1.8" style="width:60px;height:15px">
+      绝缘子金具长度(m)： <input type="number" name="Ljj" min="0" value="0.18" style="width:60px;height:15px">
+    </p>
+
+    <p> 输入几何尺寸数据：</p>
+    <p> 高差h(m)： <input type="number" name="H" min="0" value="0" style="width:60px;height:15px">
+      允许弧垂fmax(m)： <input type="number" name="f" min="0" value="2.0" style="width:60px;height:15px">
+    </p>
+    <p> LA2(m)： <input type="number" name="LA2" min="0" value="15" style="width:60px;height:15px">
+      L23(m)： <input type="number" name="L23" min="0" value="10" style="width:60px;height:15px">
+      L3B(m)： <input type="number" name="L3B" min="0" value="29.5" style="width:60px;height:15px">
+      LP1(m)： <input type="number" name="LP1" min="0" value="8" style="width:60px;height:15px">
+      LP2(m)： <input type="number" name="LP2" min="0" value="8" style="width:60px;height:15px">
+      LP3(m)： <input type="number" name="LP3" min="0" value="0" style="width:60px;height:15px">
+      LP4(m)： <input type="number" name="LP4" min="0" value="8" style="width:60px;height:15px">
+    </p>
+    <p> 输入引下线金具数据：</p>
+    <p> P1金具重量(kg)： <input type="number" name="GP1" min="0" value="2.49" style="width:60px;height:15px">
+      P2金具重量(kg)： <input type="number" name="GP2" min="0" value="2.49" style="width:60px;height:15px">
+      P3金具重量(kg)： <input type="number" name="GP3" min="0" value="0" style="width:60px;height:15px">
+      P4金具重量(kg)： <input type="number" name="GP4" min="0" value="2.49" style="width:60px;height:15px">
+    </p>
+    <p> 输入其他数据：</p>
+    <p> 三相上人重量(kg)： <input type="number" name="Psx" min="0" value="100" style="width:60px;height:15px">
+      单相上人重量(kg)： <input type="number" name="Pdx" min="0" value="150" style="width:60px;height:15px">
+      每相导线根数： <input type="number" name="nL" min="1" max="2" value="1" style="width:60px;height:15px">
+      间隔棒重量(kg)： <input type="number" name="Gjgb" min="0" value="0" style="width:60px;height:15px">
+      间隔棒间距(m)： <input type="number" name="Djgb" min="0.1" value="2" style="width:60px;height:15px">
+    </p>
+
+  </form>
+
+<script>
+
+    function printResult()
+    {
+
+    var q1=Number(form1.q1.value);
+    var b=Number(form1.b.value);
+    var Vmax=Number(form1.Vmax.value);
+    var V=Number(form1.V.value);
+
+    var LA2=Number(form1.LA2.value);
+    var L23=Number(form1.L23.value);
+    var L3B=Number(form1.L3B.value);
+    var LAB=LA2+L23+L3B;
+
+    var LP1=Number(form1.LP1.value);
+    var LP2=Number(form1.LP2.value);
+    var LP3=Number(form1.LP3.value);
+    var LP4=Number(form1.LP4.value);
+    var GP1=Number(form1.GP1.value);
+    var GP2=Number(form1.GP2.value);
+    var GP3=Number(form1.GP3.value);
+    var GP4=Number(form1.GP4.value);
+
+    var Psx=Number(form1.Psx.value);
+    var Pdx=Number(form1.Pdx.value);
+
+    var H=Number(form1.H.value);
+    var f=Number(form1.f.value);
+
+    var s=Number(form1.s.value);
+    var E=Number(form1.E.value);
+    var a=Number(form1.a.value);
+    var d=Number(form1.d.value);
+
+    var L0=Number(form1.L0.value);
+    var Q01=Number(form1.Q01.value);
+    var dQ0=Number(form1.dQ0.value);
+    var AQ0=Number(form1.AQ0.value);
+    var n=Number(form1.n.value);
+    var Gjj=Number(form1.Gjj.value);
+    var Ljj=Number(form1.Ljj.value);
+
+    var Tload=Number(form1.Tload.value);
+    var TV=Number(form1.TV.value);
+    var TT=Number(form1.TT.value);
+    var Ttdgw=Number(form1.Ttdgw.value);
+    var Ttddw=Number(form1.Ttddw.value);
+    var Tddgw=Number(form1.Ttdgw.value);
+    var Tdddw=Number(form1.Ttddw.value);
+    var Tsggw=Number(form1.Tsggw.value);
+    var Tsgdw=Number(form1.Tsgdw.value);
+
+        var nL=Number(form1.nL.value);
+        var Gjjb=Number(form1.Gjgb.value);
+        var Djjb=Number(form1.Djgb.value);
+    //**************************************************************************
+
+    //**************************************************************************
+        q1=q1*nL+Gjjb/Djjb;
+    var tanr=H/LAB;
+    var cosr=Math.cos(Math.atan(tanr));
+    //**************************************************************************
+    var q2=0.00283*b*(d+b);
+    var q3=q2+q1;
+    var q4=0.075*Vmax*Vmax*d*0.001;
+    var qjx=0.075*V*V*d*0.001;
+    var q5=0.075*V*V*(d+2*b)*0.001;
+    var qV=Math.sqrt(q1*q1+q4*q4);
+    var qload=Math.sqrt(q3*q3+q5*q5);
+    var qjxsg=Math.sqrt(q1*q1+qjx*qjx);
+    var qT=q1;
+    //**************************************************************************
+    var Q02=0.00283*b*(dQ0+b);
+    var Q03=Q02+Q01;
+    var Q04=0.0375*1.1*AQ0*Vmax*Vmax;
+    var Q0jx=0.0375*1.1*AQ0*V*V;
+    var Q3=Q03*n+Gjj;
+    var Qjx=Q0jx*n;
+    var Q1=Q01*n+Gjj;
+    var QT=Q1;
+    var Q4=Q04*n;
+    var Qload=Math.sqrt(Q3*Q3+Qjx*Qjx);
+    var QV=Math.sqrt(Q1*Q1+Q4*Q4);
+    var Qjxsg=Math.sqrt(Q1*Q1+Qjx*Qjx);
+    var LA1=(n*L0+Ljj)*0.9575;
+    //**************************************************************************
+    var L4B=LA1;
+    var L12=LA2-LA1;
+    var LA3=LA2+L23;
+    var LA4=LAB-L4B;
+    var L34=L3B-L4B;
+    var L2B=LAB-LA2;
+    var L1B=LAB-LA1;
+    var L14=LAB-LA1-L4B;
+    var zeta=E*cosr/(2*s*s*L14);
+    //**************************************************************************
+
+    //**************************************************************************
+
+    var GA1load=Qload;
+    var G4Bload=Qload;
+
+    var P1load=qload*LP1+GP1;
+    var P2load=qload*LP2+GP2;
+    var P3load=qload*LP3+GP3;
+    var P4load=qload*LP4+GP4;
+
+
+    var GA1T=QT;
+    var G4BT=QT;
+
+    var P1T=qT*LP1+GP1;
+    var P2T=qT*LP2+GP2;
+    var P3T=qT*LP3+GP3;
+    var P4T=qT*LP4+GP4;
+
+
+    var GA1V=QV;
+    var G4BV=QV;
+
+    var P1V=qV*LP1+GP1;
+    var P2V=qV*LP2+GP2;
+    var P3V=qV*LP3+GP3;
+    var P4V=qV*LP4+GP4;
+
+
+    var GA1td=Qjxsg;
+    var G4Btd=Qjxsg;
+
+    var P1td=qjxsg*LP1+GP1;
+    var P2td=qjxsg*LP2+GP2+Psx;
+    var P3td=qjxsg*LP3+GP3;
+    var P4td=qjxsg*LP4+GP4;
+    var qtd=qjxsg;
+
+    var GA1dd=Qjxsg;
+    var G4Bdd=Qjxsg;
+
+    var P1dd=qjxsg*LP1+GP1;
+    var P2dd=qjxsg*LP2+GP2+Pdx;
+    var P3dd=qjxsg*LP3+GP3;
+    var P4dd=qjxsg*LP4+GP4;
+    var qdd=qjxsg;
+
+    var GA1sg=Qjxsg;
+    var G4Bsg=Qjxsg;
+
+    var P1sg=qjxsg*LP1+GP1;
+    var P2sg=qjxsg*LP2+GP2;
+    var P3sg=qjxsg*LP3+GP3;
+    var P4sg=qjxsg*LP4+GP4;
+    var qsg=qjxsg;
+
+
+    var RAp,RBp,L1M,L2M,LM3,G12,G34,G2M,GM3, Qx1,Qy1,M1,D1,Qx2,M2,D2,QxM,MM,DM,Qx3,M3,D3,Qx4,M4,D4,Qx5,M5,D5,Mmax,D;
+    var G4B,GA1,q,P1,P2,P3,P4;
+
+
+    var A,x0,x1,k,fx,fxd;
+    //**************************************************************************
+
+    //**************************************************************************
+    G4B=G4Bload;
+    GA1=GA1load;
+    q=qload;
+    P1=P1load;
+    P2=P2load;
+    P3=P3load;
+    P4=P4load;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var H0=Mmax/f;
+    var sigma0=H0/s;
+    //**************************************************************************
+
+    //**************************************************************************
+    var fload=f;
+    var Mload=Mmax;
+    var Dload=D;
+    var Hload=H0;
+    var sigmaload=sigma0;
+    var Cload=zeta*Dload*cosr*cosr;
+    var RAload=RAp+Hload*tanr;
+    var RBload=RBp-Hload*tanr;
+
+    //**************************************************************************
+
+    //**************************************************************************
+    G4B=G4BT;
+    GA1=GA1T;
+    q=qT;
+    P1=P1T;
+    P2=P2T;
+    P3=P3T;
+    P4=P4T;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //**************************************************************************
+
+    //**************************************************************************
+    var MT=Mmax;
+    var DT=D;
+    var CT;
+    CT=zeta*DT*cosr*cosr;
+    Tn=TT;
+    Cn=CT;
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmaT=x1;
+    var HT=sigmaT*s;
+    var fT=MT/HT;
+    var RAT=RAp+HT*tanr;
+    var RBT=RBp-HT*tanr;
+
+    //**************************************************************************
+
+    //**************************************************************************
+    G4B=G4BV;
+    GA1=GA1V;
+    q=qV;
+    P1=P1V;
+    P2=P2V;
+    P3=P3V;
+    P4=P4V;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //**************************************************************************
+
+    //**************************************************************************
+    var MV=Mmax;
+    var DV=D;
+    var CV=zeta*DV*cosr*cosr;
+    var Tn=TV;
+    var Cn=CV;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmaV=x1;
+    var HV=sigmaV*s;
+    var fV=MV/HV;
+    var RAV=RAp+HV*tanr;
+    var RBV=RBp-HV*tanr;
+    //**************************************************************************
+
+    //**************************************************************************
+
+    //**************************************************************************
+
+    G4B=G4Btd;
+    GA1=GA1td;
+    q=qtd;
+    P1=P1td;
+    P2=P2td;
+    P3=P3td;
+    P4=P4td;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+    //**************************************************************************
+    var Mtd=Mmax;
+    var Dtd=D;
+    var Ctd=zeta*Dtd*cosr*cosr;
+    Cn=Ctd;
+    //**************************************************************************
+    Tn=Ttdgw;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmatdgw=x1;
+    var Htdgw=sigmatdgw*s;
+    var ftdgw=Mtd/Htdgw;
+    var RAtdgw=RAp+Htdgw*tanr;
+    var RBtdgw=RBp-Htdgw*tanr;
+    //**************************************************************************
+    Tn=Ttddw;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmatddw=x1;
+    var Htddw=sigmatddw*s;
+    var ftddw=Mtd/Htddw;
+    var RAtddw=RAp+Htddw*tanr;
+    var RBtddw=RBp-Htddw*tanr;
+
+    //**************************************************************************
+
+    //**************************************************************************
+
+    G4B=G4Bdd;
+    GA1=GA1dd;
+    q=qdd;
+    P1=P1dd;
+    P2=P2dd;
+    P3=P3dd;
+    P4=P4dd;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //**************************************************************************
+
+    //**************************************************************************
+    var Mdd=Mmax;
+    var Ddd=D;
+    var Cdd=zeta*Ddd*cosr*cosr;
+    Cn=Cdd;
+    //**************************************************************************
+    Tn=Tddgw;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmaddgw=x1;
+    var Hddgw=sigmaddgw*s;
+    var fddgw=Mdd/Hddgw;
+    var RAddgw=RAp+Hddgw*tanr;
+    var RBddgw=RBp-Hddgw*tanr;
+    //**************************************************************************
+    Tn=Tdddw;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    A=sigmaload-Cload/(sigmaload*sigmaload)-E*a*cosr*(Tn-Tload);
+    x0=1.0;
+    x1=0;
+    k=1;
+    while(k>0.001)
+    {
+        fx=(x0-A)*x0*x0-Cn;
+        fxd=3*x0*x0-2*A*x0;
+        x1=x0-fx/fxd;
+        k=Math.abs(x0-x1);
+        x0=x1;
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    var sigmadddw=x1;
+    var Hdddw=sigmadddw*s;
+    var fdddw=Mdd/Hdddw;
+    var RAdddw=RAp+Hdddw*tanr;
+    var RBdddw=RBp-Hdddw*tanr;
+    //**************************************************************************
+
+    //**************************************************************************
+
+    //**************************************************************************
+
+    G4B=G4Bsg;
+    GA1=GA1sg;
+    q=qsg;
+    P1=P1sg;
+    P2=P2sg;
+    P3=P3sg;
+    P4=P4sg;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    RAp=(G4B*L4B*0.5+GA1*(LAB-LA1*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*L1B+P2*L2B+P3*L3B+P4*L4B);
+    RBp=(GA1*LA1*0.5+G4B*(LAB-L4B*0.5))/LAB+q/cosr*L14*0.5+1/LAB*(P1*LA1+P2*LA2+P3*LA3+P4*LA4);
+
+    L1M=(RAp-P1-P2-GA1)*cosr/q;
+    L2M=L1M-L12;
+    LM3=L23-L2M;
+
+    G12=L12*q/cosr;
+    G34=L34*q/cosr;
+    G2M=L2M*q/cosr;
+    GM3=LM3*q/cosr;
+
+    Qx1=RAp;
+    Qy1=Qx1-GA1;
+    M1=0.5*LA1*(Qx1+Qy1);
+    D1=M1*M1/LA1+(1/12)*LA1*GA1*GA1;
+    Qx2=Qy1-P1;Qy2=Qx2-G12;
+    M2=0.5*L12*(Qx2+Qy2);
+    D2=M2*M2/L12+(1/12)*L12*G12*G12;
+    QxM=Qy2-P2;QyM=QxM-G2M;
+    MM=0.5*L2M*(QxM+QyM);
+    DM=MM*MM/L2M+(1/12)*L2M*G2M*G2M;
+    Qx3=QyM;Qy3=Qx3-GM3;
+    M3=0.5*LM3*(Qx3+Qy3);
+    D3=M3*M3/LM3+(1/12)*LM3*GM3*GM3;
+    Qx4=Qy3-P3;Qy4=Qx4-G34;
+    M4=0.5*L34*(Qx4+Qy4);
+    D4=M4*M4/L34+(1/12)*L34*G34*G34;
+    Qx5=Qy4-P4;Qy5=-RBp;
+    M5=0.5*L4B*(Qx5+Qy5);
+    D5=M5*M5/L4B+(1/12)*L4B*G4B*G4B;
+
+    Mmax=(Math.abs(M1)+Math.abs(M2)+Math.abs(MM)+Math.abs(M3)+Math.abs(M4)+Math.abs(M5))*0.5;
+    D=D1+D2+DM+D3+D4+D5;
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //**************************************************************************
+
+    //**************************************************************************
+    var Msg=Mmax;
+    var Dsg=D;
+    var Csg=zeta*Dsg*cosr*cosr;
+    Cn=Csg;
+    //**************************************************************************
+    //**************************************************************************
+
+    //**************************************************************************
+    var NO=Math.round((Tsggw-Tsgdw)/5+1);
+    var sigmasg=new Array(NO);
+    var Hsg=new Array(NO);
+    var fsg=new Array(NO);
+    var RAsg=new Array(NO);
+    var RBsg=new Array(NO);
+    var Tsgwd=new Array(NO);
+    var Tsg=Tsgdw;
+    var i=0;
+
+    while(i<NO) {
+        Tn = Tsg;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaload - Cload / (sigmaload * sigmaload) - E * a * cosr * (Tn - Tload);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmasg[i] = x1;
+        Hsg[i] = sigmasg[i] * s;
+        fsg[i] = Msg / Hsg[i];
+        RAsg[i] = RAp + Hsg[i] * tanr;
+        RBsg[i] = RBp - Hsg[i] * tanr;
+        Tsgwd[i] = Tsg;
+        Tsg = Tsg + 5;
+        i = i + 1;
+    }
+
+    //**************************************************************************
+
+    //**************************************************************************
+    if (fload<fT) {
+        G4B = G4BT;
+        GA1 = GA1T;
+        q = qT;
+        P1 = P1T;
+        P2 = P2T;
+        P3 = P3T;
+        P4 = P4T;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        H0 = Mmax/f;
+        sigma0 = H0/s;
+        //**************************************************************************
+
+        //**************************************************************************
+        fT = f;
+        MT = Mmax;
+        DT = D;
+        HT = H0;
+        sigmaT = sigma0;
+        CT = zeta * DT * cosr * cosr;
+        RAT = RAp + HT * tanr;
+        RBT = RBp - HT * tanr;
+        //**************************************************************************
+
+        //**************************************************************************
+        G4B = G4Bload;
+        GA1 = GA1load;
+        q = qload;
+        P1 = P1load;
+        P2 = P2load;
+        P3 = P3load;
+        P4 = P4load;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //**************************************************************************
+
+        //**************************************************************************
+        Mload = Mmax;
+        Dload = D;
+        Cload = zeta * Dload * cosr * cosr;
+        Tn = Tload;
+        Cn = Cload;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmaload = x1;
+        Hload = sigmaload * s;
+        fload = Mload / Hload;
+        RAload = RAp + Hload * tanr;
+        RBload = RBp - Hload * tanr;
+
+        //**************************************************************************
+
+        //**************************************************************************
+        G4B = G4BV;
+        GA1 = GA1V;
+        q = qV;
+        P1 = P1V;
+        P2 = P2V;
+        P3 = P3V;
+        P4 = P4V;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //**************************************************************************
+
+        //**************************************************************************
+        MV = Mmax;
+        DV = D;
+        CV = zeta * DV * cosr * cosr;
+        Tn = TV;
+        Cn = CV;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmaV = x1;
+        HV = sigmaV * s;
+        fV = MV / HV;
+        RAV = RAp + HV * tanr;
+        RBV = RBp - HV * tanr;
+
+        //**************************************************************************
+
+        //**************************************************************************
+        G4B = G4Btd;
+        GA1 = GA1td;
+        q = qtd;
+        P1 = P1td;
+        P2 = P2td;
+        P3 = P3td;
+        P4 = P4td;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //**************************************************************************
+
+        //**************************************************************************
+        Mtd = Mmax;
+        Dtd = D;
+        Ctd = zeta * Dtd * cosr * cosr;
+        Cn = Ctd;
+        //**************************************************************************
+        Tn = Ttdgw;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmatdgw = x1;
+        Htdgw = sigmatdgw * s;
+        ftdgw = Mtd / Htdgw;
+        RAtdgw = RAp + Htdgw * tanr;
+        RBtdgw = RBp - Htdgw * tanr;
+        //**************************************************************************
+        Tn = Ttddw;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmatddw = x1;
+        Htddw = sigmatddw * s;
+        ftddw = Mtd / Htddw;
+        RAtddw = RAp + Htddw * tanr;
+        RBtddw = RBp - Htddw * tanr;
+
+        //**************************************************************************
+
+        //**************************************************************************
+        G4B = G4Bdd;
+        GA1 = GA1dd;
+        q = qdd;
+        P1 = P1dd;
+        P2 = P2dd;
+        P3 = P3dd;
+        P4 = P4dd;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //**************************************************************************
+
+        //**************************************************************************
+        Mdd = Mmax;
+        Ddd = D;
+        Cdd = zeta * Ddd * cosr * cosr;
+        Cn = Cdd;
+        //**************************************************************************
+        Tn = Tddgw;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmaddgw = x1;
+        Hddgw = sigmaddgw * s;
+        fddgw = Mdd / Hddgw;
+        RAddgw = RAp + Hddgw * tanr;
+        RBddgw = RBp - Hddgw * tanr;
+        //**************************************************************************
+        Tn = Tdddw;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+        x0 = 1.0;
+        x1 = 0;
+        k = 1;
+        while (k > 0.001) {
+            fx = (x0 - A) * x0 * x0 - Cn;
+            fxd = 3 * x0 * x0 - 2 * A * x0;
+            x1 = x0 - fx / fxd;
+            k = Math.abs(x0 - x1);
+            x0 = x1;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        sigmadddw = x1;
+        Hdddw = sigmadddw * s;
+        fdddw = Mdd / Hdddw;
+        RAdddw = RAp + Hdddw * tanr;
+        RBdddw = RBp - Hdddw * tanr;
+        //**************************************************************************
+
+        //**************************************************************************
+        G4B = G4Bsg;
+        GA1 = GA1sg;
+        q = qsg;
+        P1 = P1sg;
+        P2 = P2sg;
+        P3 = P3sg;
+        P4 = P4sg;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        RAp = (G4B * L4B * 0.5 + GA1 * (LAB - LA1 * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * L1B + P2 * L2B + P3 * L3B + P4 * L4B);
+        RBp = (GA1 * LA1 * 0.5 + G4B * (LAB - L4B * 0.5)) / LAB + q / cosr * L14 * 0.5 + 1 / LAB * (P1 * LA1 + P2 * LA2 + P3 * LA3 + P4 * LA4);
+
+        L1M = (RAp - P1 - P2 - GA1) * cosr / q;
+        L2M = L1M - L12;
+        LM3 = L23 - L2M;
+
+        G12 = L12 * q / cosr;
+        G34 = L34 * q / cosr;
+        G2M = L2M * q / cosr;
+        GM3 = LM3 * q / cosr;
+
+        Qx1 = RAp;
+        Qy1 = Qx1 - GA1;
+        M1 = 0.5 * LA1 * (Qx1 + Qy1);
+        D1 = M1 * M1 / LA1 + (1 / 12) * LA1 * GA1 * GA1;
+        Qx2 = Qy1 - P1;
+        Qy2 = Qx2 - G12;
+        M2 = 0.5 * L12 * (Qx2 + Qy2);
+        D2 = M2 * M2 / L12 + (1 / 12) * L12 * G12 * G12;
+        QxM = Qy2 - P2;
+        QyM = QxM - G2M;
+        MM = 0.5 * L2M * (QxM + QyM);
+        DM = MM * MM / L2M + (1 / 12) * L2M * G2M * G2M;
+        Qx3 = QyM;
+        Qy3 = Qx3 - GM3;
+        M3 = 0.5 * LM3 * (Qx3 + Qy3);
+        D3 = M3 * M3 / LM3 + (1 / 12) * LM3 * GM3 * GM3;
+        Qx4 = Qy3 - P3;
+        Qy4 = Qx4 - G34;
+        M4 = 0.5 * L34 * (Qx4 + Qy4);
+        D4 = M4 * M4 / L34 + (1 / 12) * L34 * G34 * G34;
+        Qx5 = Qy4 - P4;
+        Qy5 = -RBp;
+        M5 = 0.5 * L4B * (Qx5 + Qy5);
+        D5 = M5 * M5 / L4B + (1 / 12) * L4B * G4B * G4B;
+
+        Mmax = (Math.abs(M1) + Math.abs(M2) + Math.abs(MM) + Math.abs(M3) + Math.abs(M4) + Math.abs(M5)) * 0.5;
+        D = D1 + D2 + DM + D3 + D4 + D5;
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        //**************************************************************************
+
+        //**************************************************************************
+        Msg = Mmax;
+        Dsg = D;
+        Csg = zeta * Dsg * cosr * cosr;
+        Cn = Csg;
+        //**************************************************************************
+
+        //**************************************************************************
+        Tsg = Tsgdw;
+        i = 0;
+        while (i < NO) {
+            Tn = Tsg;
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            A = sigmaT - CT / (sigmaT * sigmaT) - E * a * cosr * (Tn - TT);
+            x0 = 1.0;
+            x1 = 0;
+            k = 1;
+            while (k > 0.001) {
+                fx = (x0 - A) * x0 * x0 - Cn;
+                fxd = 3 * x0 * x0 - 2 * A * x0;
+                x1 = x0 - fx / fxd;
+                k = Math.abs(x0 - x1);
+                x0 = x1;
+            }
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            sigmasg[i] = x1;
+            Hsg[i] = sigmasg[i] * s;
+            fsg[i] = Msg / Hsg[i];
+            RAsg[i] = RAp + Hsg[i] * tanr;
+            RBsg[i] = RBp - Hsg[i] * tanr;
+            Tsgwd[i] = Tsg;
+            Tsg = Tsg + 5;
+            i = i + 1;
+        }
+    }
+
+    //**************************************************************************
+
+    //**************************************************************************
+    var Pf=Q4+0.5*q4*(L14/cosr+0.5*(LP1+LP2+LP3+LP4));
+    //**************************************************************************
+
+    //**************************************************************************
+
+        myWindow=window.open('','','width=1000,height=500');
+        myWindow.document.write("#################################### 导体实用力学计算程序 #####################################" + "<br>"+ "<br>");
+        myWindow.document.write("******************************************最大荷载工况*****************************************" + "<br>");
+    Hload=Hload*0.0098;
+    RAload=RAload*0.0098;
+    RBload=RBload*0.0098;
+        myWindow.document.write("弧垂(m)：" +fload.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Hload.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAload.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBload.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Tload.toFixed(1)+ "<br>");
+        myWindow.document.write("******************************************最高温度工况*****************************************" + "<br>");
+    HT=HT*0.0098;
+    RAT=RAT*0.0098;
+    RBT=RBT*0.0098;
+        myWindow.document.write("弧垂(m)：" +fT.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +HT.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAT.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBT.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +TT.toFixed(1)+ "<br>");
+        myWindow.document.write("******************************************最大风速工况*****************************************" + "<br>");
+    HV=HV*0.0098;
+    RAV=RAV*0.0098;
+    RBV=RBV*0.0098;
+        myWindow.document.write("弧垂(m)：" +fV.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +HV.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAV.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBV.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +TV.toFixed(1)+ "<br>");
+        myWindow.document.write("******************************************停电检修工况*****************************************" + "<br>");
+    Htdgw=Htdgw*0.0098;
+    RAtdgw=RAtdgw*0.0098;
+    RBtdgw=RBtdgw*0.0098;
+    Htddw=Htddw*0.0098;
+    RAtddw=RAtddw*0.0098;
+    RBtddw=RBtddw*0.0098;
+        myWindow.document.write("弧垂(m)：" +ftdgw.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Htdgw.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAtdgw.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBtdgw.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Ttdgw.toFixed(1)+ "<br>");
+        myWindow.document.write("弧垂(m)：" +ftddw.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Htddw.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAtddw.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBtddw.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Ttddw.toFixed(1)+ "<br>");
+        myWindow.document.write("******************************************带电检修工况*****************************************" + "<br>");
+    Hddgw=Hddgw*0.0098;
+    RAddgw=RAddgw*0.0098;
+    RBddgw=RBddgw*0.0098;
+    Hdddw=Hdddw*0.0098;
+    RAdddw=RAdddw*0.0098;
+    RBdddw=RBdddw*0.0098;
+        myWindow.document.write("弧垂(m)：" +fddgw.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Hddgw.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAddgw.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBddgw.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Tddgw.toFixed(1)+ "<br>");
+        myWindow.document.write("弧垂(m)：" +fdddw.toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Hdddw.toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAdddw.toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBdddw.toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Tdddw.toFixed(1)+ "<br>");
+        myWindow.document.write("******************************************施工安装工况*****************************************" + "<br>");
+    var j=0;
+    while(j<NO){
+        Hsg[j]=Hsg[j]*0.0098;
+        RAsg[j]=RAsg[j]*0.0098;
+        RBsg[j]=RBsg[j]*0.0098;
+        myWindow.document.write("弧垂(m)：" +fsg[j].toFixed(2) +"&nbsp;&nbsp;水平拉力H（kN)：" +Hsg[j].toFixed(4)+"&nbsp;&nbsp;RA(kN)：" +RAsg[j].toFixed(4)+ "&nbsp;&nbsp;RB(kN)：" +RBsg[j].toFixed(4)+ "&nbsp;&nbsp;温度（℃)：" +Tsgwd[j].toFixed(1)+ "<br>");
+        j=j+1;
+    }
+        myWindow.document.write("************************************最大风速工况时的侧向风压***********************************" + "<br>");
+    Pf=Pf*0.0098;
+        myWindow.document.write("侧向风压（kN)：" +Pf.toFixed(4) + "<br>");
+    }
+    //**************************************************************************
+
+    //**************************************************************************
+    function printParameter() {
+        winParameter = window.open('', '', 'width=1000,height=500');
+        winParameter.document.write("######################################### 常用导线参数 ############################################" + "<br>" + "<br>");
+        winParameter.document.write("导线类型&nbsp;&nbsp;截面s(mm2)&nbsp;&nbsp;直径d(mm)&nbsp;&nbsp;" +
+            "弹性模量E(N/mm2)&nbsp;&nbsp;&nbsp;&nbsp;温度系数ax(1/℃)&nbsp;&nbsp;导线自重q1(kg/m)" + "<br>");
+        winParameter.document.write("LGJ300-25&nbsp;&nbsp;333.31&nbsp;&nbsp;&nbsp;&nbsp;23.76&nbsp;&nbsp;&nbsp;&nbsp;65000" +
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;20.5e-6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.058" + "<br>");
+
+        winParameter.document.write(" " + "<br>" + "<br>");
+        winParameter.document.write("######################################### 常用绝缘子参数 ##########################################" + "<br>" + "<br>");
+        winParameter.document.write("绝缘子类型&nbsp;&nbsp;长度(m)&nbsp;&nbsp;重量(kg)&nbsp;&nbsp;" +
+            "等效直径(mm)&nbsp;&nbsp;等效面积(m2)&nbsp;&nbsp;金具重量(kg)&nbsp;&nbsp;金具长度(m)" + "<br>");
+        winParameter.document.write("X-4.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.146&nbsp;&nbsp;&nbsp;&nbsp;5.0&nbsp;&nbsp;&nbsp;&nbsp;32.0495" +
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.0173&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.80&nbsp;&nbsp;&nbsp;&nbsp;0.18" + "<br>");
+    }
+
+</script>
+
+  <form name="form2">
+    <input type="button" value="打开计算模型" onclick="window.open('http://image.baidu.com/detail/newindex?col=&tag=&pn=0&pid=39351619733&aid=413083286&user_id=2805421308&setid=-1&sort=0&newsPn=&star=&fr=&from=2')">
+    <input type="button" name="button" value="显示常用导线及绝缘子参数" onclick="printParameter()">
+    <input type="button" name="button" value="输出计算结果" onclick="printResult()">
+    <input type="button" name="button" value="帮助文档" onclick="alert("还在编写当中！")">
+  </form>
+</body>
+</html>
+
+  

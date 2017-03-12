@@ -1,0 +1,641 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>专利学习——Using Low Discrepancy Sequences to Match Template | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="专利学习——Using Low Discrepancy Sequences to Match Template">
+<meta property="og:url" content="http://www.yanghespace.com/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg">
+<meta property="og:image" content="http://ww3.sinaimg.cn/large/8f4158c5gw1f4kgrxvmr4j21bj254gxd.jpg">
+<meta property="og:updated_time" content="2016-06-05T09:16:35.248Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="专利学习——Using Low Discrepancy Sequences to Match Template">
+<meta name="twitter:description" content="最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。">
+<meta name="twitter:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/" title="专利学习——Using Low Discrepancy Sequences to Match Template" itemprop="url">专利学习——Using Low Discrepancy Sequences to Match Template</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2015-10-11T11:48:03.000Z" itemprop="datePublished"> 发表于 2015-10-11</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p>最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。</p>
+<a id="more"></a>
+<p>这是一篇NI的专利：<br>专利名称：Pattern matching system and method with improved template image sampling using low discrepancy sequences.<br>专利号：US6229921B1。</p>
+<p>##1.摘要<br>本篇专利提出了一种模板定位的方法。该方法首先使用低差异序列（Low Discrepancy sequence），也被称为拟随机序列（quasi-random sequence）来对图像进行采样，采样得到的一系列像素点用来精确描述模板。然后使用采样点来进行模板匹配过程。该方法同时对采样点进行了局部稳定性分析（a local stability analysis），以期得到更精确的结果。局部稳定性分析将采样点根据不同领域大小的稳定性分类，然后从高稳定性到低稳定性采样点进行模板匹配。同时该专利还选取根据旋转不变性采样点来进行旋转匹配，比如圆环采样。这种旋转不变性采样的模板匹配也可以使用局部稳定性进行coarse to fine搜索。</p>
+<p>##2.背景介绍<br>模板匹配的过程是为了确定在目标图像中模板的位姿，包括匹配质量，匹配位置、角度及缩放因子。一般的情况下将模板的像素与所有可能的位置进行比较，通常会使用一种归一化相关性系数的技术来计算是否匹配。这种方法在我另一篇文章：<a href="http://yanghespace.com/2015/08/09/%E5%9F%BA%E4%BA%8ENCC%E7%9A%84%E6%A8%A1%E6%9D%BF%E5%8C%B9%E9%85%8D%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%AE%9E%E7%8E%B0%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82/" target="_blank" rel="external">基于NCC的模板匹配介绍及实现技术细节</a>中有详细的描述，同时注意到在那片文章中使用了图像金字塔来减少匹配的时间消耗。由于归一化相关性系数的计算极为耗时，即使有了一些快速计算的优化方法提出，但是对于在整个图像中进行搜索的话，计算量就非常大，无法将其应用在实际生产中。那么在这篇专利中提出的方法是对模板进行采样，以此来大大减少搜索的时间消耗。</p>
+<p>##3.算法实现</p>
+<p>####3.1 低差异序列(Low Discrepancy sequence)简介<br>在具体介绍算法之前，需要对拟随机序列做一下<a href="https://zh.wikipedia.org/wiki/伪随机性" target="_blank" rel="external">简单的介绍</a>。先来谈下随机数的概念，真正的随机数必须使用专门的设备，比如热噪讯号、量子力学的效应、放射性元素的衰退辐射，或使用无法预测的现象，譬如用户按键盘的位置与速度、用户运动鼠标的路径坐标等来产生。在计算机中都是通过随机函数来生产随机序列，生成的随机序列称为伪随机数(Pseudo-random number)，常用的算法有<a href="https://zh.wikipedia.org/wiki/%E6%A2%85%E6%A3%AE%E6%97%8B%E8%BD%AC%E7%AE%97%E6%B3%95" target="_blank" rel="external">梅森旋转算法</a>。在统计学、蒙特·卡罗方法上使用的伪随机数也必须挑选周期极长、随机性够高的随机函数，以确保计算结果有足够的随机性。而<a href="https://zh.wikipedia.org/wiki/%E6%8B%9F%E8%92%99%E7%89%B9%E5%8D%A1%E7%BD%97%E6%96%B9%E6%B3%95" target="_blank" rel="external">拟蒙特卡洛方法</a>就是使用拟随机序列来代替伪随机序列进行计算。常用的低差异序列有Halton, Sobol, Faure和Niederreiter序列等。下图是伪随机序列和低差异序列的直观比较：</p>
+<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg" width="60%"><br>    <br>    <small>由伪随机数法(左)和低差异列(右，Sobol)法生成的256点序列（红点为第1至10点，蓝点为第11至100点，绿点为第101至256点） 直观上，低差异列的分布更为均匀 </small><br></p><br>从直观上我们可以看到低差异序列能产生更为均匀的序列，同时使用更少的点就能覆盖整个区域。另外，低差异序列的产生并不复杂，感兴趣的可以自行google。回到专利中，专利就是利用了低差异序列的良好性质，可以使用较少的点作为采样点来有效覆盖模板区域，使用采样点来代替整个图像。另外，低差异序列的生成工作也可以放在前期进行，这样可以减少匹配时额外的时间消耗。<br><br>####3.2局部稳定性分析(Local stability analysis)<br>假设现在我们已经通过Halton或者Sobol方法产生了一系列样本点，我们还不能直接使用这些样本点进行模板匹配。这里还有一个重要的工作就是对这些样本点进行局部稳定性分析，进行这个步骤的目的是为了将这些像素点根据稳定性进行分类。具体是这样操作的，对每个样本点计算它和模板图像中相邻像素的相关性。相关性越高意味着稳定性越高，也就是说该样本点周围的像素值和它相似。同时，计算时可以选择不同的领域大小，比如3,5,7,9。这样就可以根据领域的大小来对不同稳定性的样本进行分类。在分类之前，可能还需要过滤掉一些稳定程度小于预设领域大小的样本点。<br>最后我们会得到不同领域大小稳定性的样本点。需要注意的是我们需要把领域的大小记录下来，因为在匹配的过程中需要用到这些信息。<br><br>####3.3 Coarse-to-fine模板匹配<br>讲完上面两个比较重要的概念后，对于匹配过程，这里就只是大概描述一下。<br>得到不同领域大小稳定性的采样点后，首先对稳定性最大的采样点在整幅图像中进行模板匹配。在整幅图像中匹配时，不需要一个像素一个像素的进行，而是使用计算好的稳定性领域大小，比如以9 pixel的大小进行遍历。这就是局部稳定性分析真正的作用。<br>当我们得到一些潜在的匹配点后，为了得到准确的匹配位置，使用稳定性次高的采样点，在匹配点一定范围内使用当前的稳定性领域大小进行进一步匹配。以此类推，直到我们遍历完所有的采样点，然后对于最后的潜在匹配点使用整个模板图像进行匹配，来得到我们最终的结果。这样就完成了整个匹配过程。<br><br>下面这张流程图是对上面描述过程的总结：<br><p align="center"><br>    <img src="http://ww3.sinaimg.cn/large/8f4158c5gw1f4kgrxvmr4j21bj254gxd.jpg" width="60%"><br>    <br>    <small>流程图</small><br></p>
+
+<p>写到这里我觉得其实已经把这篇专利中最精华的部分讲了，但是还有一个问题没有解决，那就是对于旋转以及缩放的情况考虑进来。要知道，算法实现起来真正困难的地方一个是精度，另外一个就是加上旋转以及缩放的情况了。</p>
+<p>####3.4 旋转不变性采样点<br>专利中选用不互相重叠的圆，可以是同心圆或者是非同心圆来对模板图像进行采样。那么在匹配时如何确定旋转角度呢？通过将圆环序列的采样点逐个偏移，每次偏移都计算一次匹配结果，直到偏移又回到起始点。通过选取这个过程中最佳的匹配位置，就可以确定当前位置的旋转角度（这里还要注意一个问题，就是偏移一个像素旋转的角度是多少？这个直接影响到匹配的角度精度）。</p>
+<p>另外，这个过程也可以推广到缩放的情况，通过对圆环序列进行缩放（根据当前圆环的中心），对每次缩放的样本点进行匹配。更具体的做法是，在所有圆环中选取固定半径的圆环来进行缩放匹配。</p>
+<p>####3.5 Coarse to fine search旋转模板匹配<br>3.4中讨论的只是单个位置下考虑旋转的情况，现在我们要在整幅图像中考虑旋转，平移这两个因子。</p>
+<p>同之前的处理类似，我们需要计算每个圆环的每个采样点的局部稳定性。这里我推测应该是将采样点以圆环为单位进行稳定性分类，做法同上。然后对稳定性最高的哪些圆环进行粗匹配，粗匹配包含的意思包括位置的粗匹配以及角度的粗匹配。可以想象，稳定性比较高的圆环极有可能是那些半径比较小的圆环。半径比较小，角度的精度也会相应较小（当然，我这种以圆环为单位进行样本分类的推测有待商榷）。粗匹配后，之后的过程与3.3中的方法类似，不再赘(zhui,–!)述。</p>
+<p>####3.6 End<br>算法讲起来容易，实现起来还是会碰到许多问题的，就像上面说的精度问题，旋转和缩放同时考虑的情形。<br>But i want to say:” Although talking is cheap, but sometimes useful”.</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/专利/">专利</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/模板匹配/">模板匹配</a><a href="/tags/低差异序列/">低差异序列</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/" data-title="专利学习——Using Low Discrepancy Sequences to Match Template | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/11/01/Tesseract3训练新语言/" title="Tesseract3训练新语言">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Tesseract3训练新语言</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2015/09/25/Visual Studio 2013编译Tesseract 3.04/"  title="Visual Studio 2013编译Tesseract 3.04">
+ <strong>下一篇：</strong><br/> 
+ <span>Visual Studio 2013编译Tesseract 3.04
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/" data-title="专利学习——Using Low Discrepancy Sequences to Match Template" data-url="http://www.yanghespace.com/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>

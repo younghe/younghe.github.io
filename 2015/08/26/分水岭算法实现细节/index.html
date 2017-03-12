@@ -1,0 +1,894 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>分水岭算法实现细节 | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分水岭算法实现细节">
+<meta property="og:url" content="http://www.yanghespace.com/2015/08/26/分水岭算法实现细节/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgnjftimj20o313jal4.jpg">
+<meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgldw5hkj217v0go0ux.jpg">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kglnfnk1j217v0go75g.jpg">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kglujxzdj217v0gomyv.jpg">
+<meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgm3vjqkj20hs0dctgp.jpg">
+<meta property="og:updated_time" content="2016-06-05T09:12:15.313Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分水岭算法实现细节">
+<meta name="twitter:description" content="本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgnjftimj20o313jal4.jpg">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2015/08/26/分水岭算法实现细节/" title="分水岭算法实现细节" itemprop="url">分水岭算法实现细节</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2015-08-26T12:55:01.000Z" itemprop="datePublished"> 发表于 2015-08-26</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p>本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。</p>
+<a id="more"></a>
+<p>##1.分水岭分割简介#<br>在对处理后的图像进行数据分析之前，图像分割时最重要的步骤之一，其主要目的就是为了有效提取感兴趣的目标物体。这种分割可以是基于图像特征直方图，或者是基于边缘的分割，另外一种是基于区域的分割。分水岭算法就是一种基于区域的分割算法。<br>分水岭(watershed)和集水盆地(catchment basins)的概念在地形学中是人所共知的。分水线分开了每个积水盆地。我们可以将图像数据理解成地形表面，其中灰度值的大小就表示地貌的高度。因此，分水岭分割的过程可以大致上这么理解，在全图范围内降水，盆地部分慢慢被填满，当不同集水盆将要相互连通是，筑起水坝，水坝也就是分水线。当所有的区域都被水淹过后，分水岭也就都建完成了，整个算法结束。<br>上面的只是很笼统的介绍这个算法的思路，真正算法的实现还是有很多有意思的地方。</p>
+<p>##2.Vincent-Soille分水岭算法#<br>首先先来介绍一下Vincent-Soille的分水岭算法<br>[1]Vincent L. and Soille P. Watersheds in digital spaces: An efficient algorithm based on immersion simulations, 1991.<br>论文的前面大概表达了这么个意思：“这篇论文是迄今(1991)为止效率最高，精度最好的分水岭分割算法实现”。然后描述了前人的一些工作，还有哪些不足，本篇论文进行了一一改进云云。接下来作者才甩出大招————一段伪代码，全部的代码注释已经添加在伪代码旁边：</p>
+<p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgnjftimj20o313jal4.jpg" width="60%"><br>    <br>    <small> 伪代码 </small><br></p><br>如果你按照这个伪代码原封不动的写完，算法已经实现了95%了。但是作者在论文并没有给出完全正确的代码，在关键性的步骤里面耍了几个花枪（十分恶劣）。以下给出代码运行结果<br><br><p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgldw5hkj217v0go0ux.jpg" width="60%"><br>    <br>    <small> 药片图像及其距离变换图像 </small><br></p>
+
+<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kglnfnk1j217v0go75g.jpg" width="60%"><br>    <br>    <small> 论文代码直译后运行结果（8连通） </small><br></p>
+
+<p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kglujxzdj217v0gomyv.jpg" width="60%"><br>    <br>    <small> 修改代码后运行结果（8连通） </small><br></p>
+
+<p>上面的处理步骤先对原图二值化，然后计算距离变换图像，接着需要反转距离图像，最后运用分水岭算法进行分割。<br>在这里并不打算贴出修改后的源码，但是可以提示读者错误出在“设置水坝”的那一段代码中，有兴趣的可以找一找。</p>
+<p>上述的分水岭分割并不能直接对原图处理，一般来说都需要对原图进行二值化，然后计算它的距离变换图像再进行处理，即使这样，也是非常容易分割出一些细小的区域。下面介绍另外一种分水岭填充算法。</p>
+<p>##3.OpenCV分水岭算法#</p>
+<p>继续看下上面的例子，如果直接对原图使用分水岭分割算法会有什么结果呢————过分割现象，这也是分水岭算法的一大弊端：</p>
+<p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgm3vjqkj20hs0dctgp.jpg" width="60%"><br>    <br>    <small> 过分割现象 </small><br></p>
+
+<p>在OpenCV中运行的watershed算法是参考<br>[2]F. Meyer.“Color image segmentation”1992的论文，很遗憾没有下载到该论文，不过从OpenCV的源码中可以基本了解到算法的原理。不过OpenCV中只支持彩色图像，下面的代码中修改成支持灰度图像：</p>
+<pre><code>void watershedImpl( const CvArr* srcarr, CvArr*                 dstarr )
+{
+    const int IN_QUEUE = -2;
+    const int WSHED = -1;
+    const int NQ = 256;
+    cv::Ptr&lt;CvMemStorage&gt; storage;  
+
+    CvMat sstub, *src;
+    CvMat dstub, *dst;
+    CvSize size;
+    CvWSNode* free_node = 0, *node;
+    CvWSQueue q[NQ];
+    int active_queue;
+    int i, j, ptr_i;
+    int db, dg, dr;
+    int* mask;
+    uchar* img;
+    int mstep, istep, icnl;
+    int subs_tab[513];//用于查表计算MAX(a-b,0)    
+
+    // MAX(a,b) = b + MAX(a-b,0)
+    #define ws_max(a,b) ((b) + subs_tab[(a)-(b)+NQ])
+    // MIN(a,b) = a - MAX(a-b,0)
+    #define ws_min(a,b) ((a) - subs_tab[(a)-(b)+NQ])    
+
+    #define ws_push(idx,mofs,iofs)  \
+    {                               \
+        if( !free_node )            \
+            free_node = icvAllocWSNodes( storage );\
+        node = free_node;           \
+        free_node = free_node-&gt;next;\
+        node-&gt;next = 0;             \
+        node-&gt;mask_ofs = mofs;      \
+        node-&gt;img_ofs = iofs;       \
+        if( q[idx].last )           \
+            q[idx].last-&gt;next=node; \
+        else                        \
+            q[idx].first = node;    \
+        q[idx].last = node;         \
+    }   
+
+    #define ws_pop(idx,mofs,iofs)   \
+    {                               \
+        node = q[idx].first;        \
+        q[idx].first = node-&gt;next;  \
+        if( !node-&gt;next )           \
+            q[idx].last = 0;        \
+        node-&gt;next = free_node;     \
+        free_node = node;           \
+        mofs = node-&gt;mask_ofs;      \
+        iofs = node-&gt;img_ofs;       \
+    }   
+
+    // 计算3个通道的时候像素差
+    #define c_diff3c(ptr1,ptr2,diff)    \
+    {                                   \
+        db = abs((ptr1)[0] - (ptr2)[0]);\
+        dg = abs((ptr1)[1] - (ptr2)[1]);\
+        dr = abs((ptr1)[2] - (ptr2)[2]);\
+        diff = ws_max(db,dg);           \
+        diff = ws_max(diff,dr);         \
+        assert( 0 &lt;= diff &amp;&amp; diff &lt;= 255 ); \
+    }   
+
+    // 计算1个通道的时候像素差
+    #define c_diff1c(ptr1,ptr2,diff)    \
+    {                                   \
+        diff = abs((ptr1)[0] - (ptr2)[0]);  \
+        assert( 0 &lt;= diff &amp;&amp; diff &lt;= 255 ); \
+    }   
+
+    #define c_diff(ptr1,ptr2,diff,cnl)  \
+    {                                   \
+        if (cnl == 1)                   \
+            c_diff1c(ptr1,ptr2,diff)    \
+        else                            \
+            c_diff3c(ptr1,ptr2,diff);   \
+    }   
+
+    src = cvGetMat( srcarr, &amp;sstub );
+    dst = cvGetMat( dstarr, &amp;dstub );   
+
+    if( CV_MAT_TYPE(src-&gt;type) != CV_8UC1 || CV_MAT_TYPE(src-&gt;type) != CV_8UC3)
+        CV_Error( CV_StsUnsupportedFormat, &quot;Only 8-bit, 1-channel or 3-channel input images are supported&quot; );   
+
+    if( CV_MAT_TYPE(dst-&gt;type) != CV_32SC1 )
+        CV_Error( CV_StsUnsupportedFormat,
+        &quot;Only 32-bit, 1-channel output images are supported&quot; ); 
+
+    if( !CV_ARE_SIZES_EQ( src, dst ))
+        CV_Error( CV_StsUnmatchedSizes, &quot;The input and output images must have the same size&quot; );    
+
+    size = cvGetMatSize(src);
+    storage = cvCreateMemStorage(); 
+
+    icnl = src-&gt;type == CV_8UC1 ? 1 : 3;
+    istep = src-&gt;step;
+    img = src-&gt;data.ptr;
+    mstep = dst-&gt;step / sizeof(mask[0]);//除以4
+    mask = dst-&gt;data.i;//CvMat中data结构为union类型   
+
+    memset( q, 0, NQ*sizeof(q[0]) );    
+
+    for( i = 0; i &lt; 256; i++ )
+        subs_tab[i] = 0;
+    for( i = 256; i &lt;= 512; i++ )
+        subs_tab[i] = i - 256;  
+
+    // draw a pixel-wide border of dummy &quot;watershed&quot; (i.e. boundary) pixels
+    for( j = 0; j &lt; size.width; j++ )
+        mask[j] = mask[j + mstep*(size.height-1)] = WSHED;// 将上下两条边设置成分水线   
+
+    // 初始化过程：将未标记的，但是和已标记的像素相邻的像素点加入队列，队列的个数为256，根据距离排列
+    // initial phase: put all the neighbor pixels of each marker to the ordered queue -
+    // determine the initial boundaries of the basins
+    for( i = 1; i &lt; size.height-1; i++ )
+    {
+        img += istep; mask += mstep;
+        mask[0] = mask[size.width-1] = WSHED;// 将左右两条边设置成分水线    
+
+        for( j = 1; j &lt; size.width-1; j++ )
+        {
+            int* m = mask + j;
+            if( m[0] &lt; 0 ) m[0] = 0;
+            if( m[0] == 0 &amp;&amp; (m[-1] &gt; 0 || m[1] &gt; 0 || m[-mstep] &gt; 0 || m[mstep] &gt; 0) )
+            {
+                uchar* ptr = img + j * icnl;
+                int idx = 256, t;
+                if( m[-1] &gt; 0 )
+                    c_diff( ptr, ptr - icnl, idx, icnl );
+                if( m[1] &gt; 0 )
+                {
+                    c_diff( ptr, ptr + icnl, t, icnl );
+                    idx = ws_min( idx, t );
+                }
+                if( m[-mstep] &gt; 0 )
+                {
+                    c_diff( ptr, ptr - istep, t, icnl );
+                    idx = ws_min( idx, t );
+                }
+                if( m[mstep] &gt; 0 )
+                {
+                    c_diff( ptr, ptr + istep, t, icnl );
+                    idx = ws_min( idx, t );
+                }
+                assert( 0 &lt;= idx &amp;&amp; idx &lt;= 255 );
+                ws_push( idx, i*mstep + j, i*istep + j*icnl );
+                m[0] = IN_QUEUE;
+            }
+        }
+    }   
+
+    // find the first non-empty queue
+    for( i = 0; i &lt; NQ; i++ )
+        if( q[i].first )
+            break;  
+
+    // if there is no markers, exit immediately
+    if( i == NQ )
+        return; 
+
+    active_queue = i;
+    img = src-&gt;data.ptr;
+    mask = dst-&gt;data.i; 
+
+    // recursively fill the basins
+    for(;;)
+    {
+        int mofs, iofs;
+        int lab = 0, t;
+        int* m;
+        uchar* ptr; 
+
+        if( q[active_queue].first == 0 )
+        {
+            for( i = active_queue+1; i &lt; NQ; i++ )
+                if( q[i].first )
+                    break;
+            if( i == NQ )
+                break;
+            active_queue = i;
+        }   
+
+        ws_pop( active_queue, mofs, iofs ); 
+
+        m = mask + mofs;
+        ptr = img + iofs;
+        t = m[-1];
+        if( t &gt; 0 ) lab = t;
+        t = m[1];
+        if( t &gt; 0 )
+        {
+            if( lab == 0 ) lab = t;
+            else if( t != lab ) lab = WSHED;
+        }
+        t = m[-mstep];
+        if( t &gt; 0 )
+        {
+            if( lab == 0 ) lab = t;
+            else if( t != lab ) lab = WSHED;
+        }
+        t = m[mstep];
+        if( t &gt; 0 )
+        {
+            if( lab == 0 ) lab = t;
+            else if( t != lab ) lab = WSHED;
+        }
+        assert( lab != 0 );
+        m[0] = lab;
+        if( lab == WSHED )
+            continue;   
+
+        if( m[-1] == 0 )
+        {
+            c_diff( ptr, ptr - icnl, t , icnl);
+            ws_push( t, mofs - 1, iofs - icnl );
+            active_queue = ws_min( active_queue, t );
+            m[-1] = IN_QUEUE;
+        }
+        if( m[1] == 0 )
+        {
+            c_diff( ptr, ptr + icnl, t , icnl);
+            ws_push( t, mofs + 1, iofs + icnl );
+            active_queue = ws_min( active_queue, t );
+            m[1] = IN_QUEUE;
+        }
+        if( m[-mstep] == 0 )
+        {
+            c_diff( ptr, ptr - istep, t , icnl);
+            ws_push( t, mofs - mstep, iofs - istep );
+            active_queue = ws_min( active_queue, t );
+            m[-mstep] = IN_QUEUE;
+        }
+        if( m[mstep] == 0 )
+        {
+            c_diff( ptr, ptr + istep, t , icnl);
+            ws_push( t, mofs + mstep, iofs + istep );
+            active_queue = ws_min( active_queue, t );
+            m[mstep] = IN_QUEUE;
+        }
+    }
+}
+</code></pre><p>OpenCV的这套代码需要传入带分割图像和”markers”图像，markers是标记图像，里面大于0的值表示设置的标记。也就是说，在分割之前，用户需要事先手动设置大概要把图像分割成几块。这里需要注意的是背景区域也需要设置一个标记。这个事先设置好标记个数的算法能有效避免过分割现象。</p>
+<p>当传入图像后，首先代码中先把markers的上下左右边界设置成分水岭，这实际上是为了避免这种情况：由于图像数据一行一行存储，那么在图像边界上的点比如mdata[step]这个像素（mdata是markers的data指针，step是一行的长度），它的一个邻接像素mdata[step+1]在实际图像中是另起一行，如果不把它设置成WSHED，就会误认为是邻接像素。</p>
+<p>做好处理工作后，接着是选取已经标记的像素邻接的像素点加入到队列queue中，这里的queue是一个256大小的指针数组，按照邻接像素和标记像素的像素差值来加入到对应的指针中。比如像素差5，就加入到queue[4]中。可以看到这种算法不是严格意义上的分水岭算法，它利用的是像素之间的差来作为了标记的依据（像素差小的邻接像素会优先处理）。</p>
+<p>初始化完队列，就进入最关键的填充步骤了。这个过程中，按照距离的大小，从0到255遍历队列数组中的所有像素。如果当前像素的邻接像素中只有一个像素已经被标记，那么就把它标记为相同的标记。如果有两个及以上的标记，就把这个像素标记为WSHED，即分水岭。如果这个像素不是分水岭，需要继续处理这个像素的邻接像素。<strong><em>这里可以看出OpenCV的算法是深度优先遍历，而之前的那个算法是广度优先遍历。</em></strong>直到所有的像素都处理完，算法结束。</p>
+<p>使用这种算法的优点是可以避免过分割现象，同时考虑了邻近的像素差值这个信息。但是需要事先手动设置好标记的个数，同时深度优先的算法有时会有意向不到的结果。</p>
+<p>关于OpenCV的代码运行结果就不在这里上图片了，在官方的文档、实例代码中都可以找到说明，另外很多的博客中都有详细的案例。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/机器视觉算法/">机器视觉算法</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/图像分割/">图像分割</a><a href="/tags/分水岭/">分水岭</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2015/08/26/分水岭算法实现细节/" data-title="分水岭算法实现细节 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/09/25/Visual Studio 2013编译Tesseract 3.04/" title="Visual Studio 2013编译Tesseract 3.04">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Visual Studio 2013编译Tesseract 3.04</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2015/08/09/基于NCC的模板匹配介绍及实现技术细节/"  title="基于NCC的模板匹配介绍及实现技术细节">
+ <strong>下一篇：</strong><br/> 
+ <span>基于NCC的模板匹配介绍及实现技术细节
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2015/08/26/分水岭算法实现细节/" data-title="分水岭算法实现细节" data-url="http://www.yanghespace.com/2015/08/26/分水岭算法实现细节/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>

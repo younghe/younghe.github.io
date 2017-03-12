@@ -1,0 +1,862 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Tesseract3训练新语言 | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="这是关于如何使用Tesseract3训练新的语言的文档，该文档是tesseract-ocr官方wiki上翻译过来的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tesseract3训练新语言">
+<meta property="og:url" content="http://www.yanghespace.com/2015/11/01/Tesseract3训练新语言/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="这是关于如何使用Tesseract3训练新的语言的文档，该文档是tesseract-ocr官方wiki上翻译过来的。">
+<meta property="og:updated_time" content="2016-03-20T05:55:56.200Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tesseract3训练新语言">
+<meta name="twitter:description" content="这是关于如何使用Tesseract3训练新的语言的文档，该文档是tesseract-ocr官方wiki上翻译过来的。">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2015/11/01/Tesseract3训练新语言/" title="Tesseract3训练新语言" itemprop="url">Tesseract3训练新语言</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2015-11-01T15:39:19.000Z" itemprop="datePublished"> 发表于 2015-11-01</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p>这是关于如何使用Tesseract3训练新的语言的文档，该文档是<a href="https://code.google.com/p/tesseract-ocr/wiki/TrainingTesseract3" target="_blank" rel="external">tesseract-ocr官方wiki</a>上翻译过来的。</p>
+<a id="more"></a>
+<p>###1.介绍<br>Tesseract3.0x是支持训练的。这篇文章描述如何训练的过程，提供适用于各种语言的一些指导方针，以及训练会得到的结果。对于Tesseract2.0x的训练参考：<a href="http://code.google.com/p/tesseract-ocr/wiki/TrainingTesseract" target="_blank" rel="external">TrainingTesseract</a>.</p>
+<p>###2.背景及局限性<br>Tesseract原来仅仅为了识别英文而设计的。我们做了许多努力来使得识别引擎及训练系统能够应对不同语言及UTF-8字符。Tesseract3.0能够处理任意的UTF-8字符，但是还是只能对部分的语言成功处理，因此在期望Tesseract能够对你的特定语言处理前，你要注意下这个细节。</p>
+<p>Tesseract3.01添加了从上到下排列的语言，Tesseract3.02添加了希伯来语(Hebrew)（从右到左排列）。现在Tesseract可以使用一个辅助引擎(称为cube)来应对类似阿拉伯语(Arabic)的文本。</p>
+<p>Tesseract对于大量字符集的语言(如中文)训练/识别缓慢(译者注：由于字符集非常大，增加了训练/匹配时间)，但是也能够正常工作。</p>
+<p>Tesseract需要了解一个字符的形状，通过将不同字体明确分开。之前对字体数量限制在32个，现在增加到了64个。这个可以通过intproto.h中常量MAX_NUM_CONFIGS 进行设置。注意运行时间很大程度上依赖于字体数量，如果训练字体数量大于32将会非常缓慢。</p>
+<p>如果训练的语有不一样的标点及数字，会不利于一些硬编码的算法，在这些算法中，都假设是ASCII字符集中的标点及数字。这个局限在3.0x(x&gt;=2)版本中已经修改。</p>
+<p>你需要在你的输入文件路径下运行所有的命令行。</p>
+<p>###3.所需的附加库<br>从3.03版本开始，需要一些附加库用来建立你的训练工具：<br></p><pre class="prettyprint">sudo apt-get install libicu-dev<br>sudo apt-get install libpango1.0-dev<br>sudo apt-get install libcairo2-dev</pre><p></p>
+<p>###4.建立训练工具<br>从3.03版本开始，如果你从源码编译Tesseract，你需要另外使用make命令来安装训练工具：<br></p><pre class="prettyprint">make training<br>sudo make training-install<br></pre><p></p>
+<p>###5.所需的数据文件<br>为了训练另一种语言，需要在tessdata子目录下创建一些数据文件，然后在使用combine_tessdata把这些文件合并成单个文件。命名约定为：languagecode.file_name，Language codes最好按照ISO639-3标准。English对应的训练依赖文件(3.00)为：</p>
+<ul>
+<li>tessdata/eng.config</li>
+<li>tessdata/eng.unicharset</li>
+<li>tessdata/eng.unicharambigs</li>
+<li>tessdata/eng.inttemp</li>
+<li>tessdata/eng.pffmtable</li>
+<li>tessdata/eng.normproto</li>
+<li>tessdata/eng.punc-dawg</li>
+<li>tessdata/eng.word-dawg</li>
+<li>tessdata/eng.number-dawg</li>
+<li>tessdata/eng.freq-dawg</li>
+</ul>
+<p>最后合并的文件为：</p>
+<ul>
+<li>tessdata/eng.traineddata</li>
+</ul>
+<p>并且文件</p>
+<ul>
+<li>tessdata/eng.user-words</li>
+</ul>
+<p>仍然可以单独提供。合并的traineddata只是简单的将输入文件串联，通过一个列表目录记录已知的文件类型的偏移量。可以查看源码ccutil/tessdatamanager.h中当前接受的文件名。注意traindata中包含的文件和3.00版本之前的已经不同。并且可能在今后的修订中大幅修改。</p>
+<p>####5.1 文本输入文件的要求<br>文本输入文件(如lang.config, lang.unicharambigs, font_properties, box files, wordlists for dictionaries…)需要满足以下条件：</p>
+<ul>
+<li>没有<a href="https://en.wikipedia.org/wiki/Byte_order_mark/" target="_blank" rel="external">BOM</a>的ASCII或者UTF-8字符</li>
+<li>Unix下的<a href="https://en.wikipedia.org/wiki/Newline" target="_blank" rel="external">行结束符</a>(‘\n’)</li>
+<li>文件结束符为行结束符(‘\n’).否则会提示错误信息“ast_char == ‘\n’:Error:Assert failed…”</li>
+</ul>
+<p>####5.2 你可以忽略哪些？<br>unicharset, inttemp, normproto, pfftable这些文件是一定要创建的。如果你只要识别相似或一个字体，那么一个简单的训练也就够了。其他的文件不太需要，但是可以帮助提高精度，这要看你的需求了。老版的DangAmbigs已经被unicharambigs替代。</p>
+<p>###6.训练过程<br>尽管已经有很多自动化的过程，但是有些步骤还是得手动。以后可能会有更多的自动化工具，但是需要一些复杂的安装过程。下面这些工具都是在训练子目录下自带的。</p>
+<p>####6.1 生成训练图片<br>首先确定需要的字符集，然后准备一个保护这些字符的文本。在创建训练文件时需要牢记以下几点：<br>+确保每个字符有最低的样本数，10个的话很好，对于稀少的字符5个也OK。</p>
+<ul>
+<li>对于常用的字符需要更多的样本——至少20个。</li>
+<li>对于标点和字符要打散。比如<strong>“The quick brown fox jumps over the lazy dog. 0123456789 !@#$%^&amp;(),.{}&lt;&gt;/?”</strong>这样就很差。最好是类似这样排列：<strong>“The (quick) brown {fox} jumps! over the $3,456.78 <lazy> #90 dog &amp; duck/goose, as 12.5% of E-mail from aspammer@website.com is spam?”</lazy></strong>这样可以让textline finding代码对于特殊字符更好的找到baseline.</li>
+</ul>
+<p>####6.2 自动方式-创建tif/box文件<br>准备UTF-8的字符文本(training_text.txt)包含你所需要的字符。获取你想要识别的字符字体(trueType(微软和Apple公司共同研制的字型标准)或者是其他字体)。对于每一种字体运行下面的命令行，创建对应的tif/box文件：<br></p><pre class="prettyprint">training/text2image –text=training_text.txt –outputbase=[lang].[fontname].exp0 –font=’Font Name’ –fonts_dir=/path/to/your/fonts</pre><p></p>
+<p>注意参数–font可以包含空格，因此必须加上引号，例如：</p>
+<p></p><pre class="prettyprint">training/text2image –text=training_text.txt –outputbase=eng.TimesNewRomanBold.exp0 –font=’Times New Roman Bold’ –fonts_dir=/usr/share/fonts<br></pre><p><br>text2image还有许多其他命令行参数，可以查看traning/text2image.cpp获取更多信息。</p>
+<p>如果你的应用可以使用text2image,非常好！你可以直接跳到<a href="#jump">6.4运行tesseract进行训练</a>。</p>
+<p>####6.3 手动方式-创建tif/box文件</p>
+<p>#####6.3.1 获取tif图像</p>
+<ul>
+<li>在打印文本时需要凸出空格，因此在文本编辑器中就需要增大字符间距及行间距。不充足的空格距离可能导致生成*.tr文件时弹出“FAILURE! box overlaps no blobs or blobs in multiple rows”错误信息，而这又会导致另一个错误————某个字符”x”没有样本，然后弹出“”Error: X classes in inttemp while unicharset contains Y unichars”，这样的训练数据就不能用了。以后我们会解决这种问题，但是3.00的版本还是会出现这种情况。</li>
+<li>训练文件应该要以字体区分。理想的情况是单一字符的所有样本都在同一个tiff图像中，但这样可能需要多页tiff(如果你安装了libtiff或者是leptonica)，这样单一的字体中包含的训练数据可能有很多页并且包含成千上万的字符，同时允许对大字符集语言进行训练。</li>
+<li><strong>不要再一个图像文件中混淆字体</strong>这会导致聚类时特征的丢失，从而导致识别错误。</li>
+</ul>
+<p>下一步就是打印并扫描图像，用来创建你的训练页。最多支持64个训练页。最好创建包含斜体及黑体的混合的字体及样式（但是要在不同的文件中）。</p>
+<p><strong>注意</strong>对真实图像进行训练有点困难，这是由于间隔宽度的要求。这在今后的版本中会得到改善。</p>
+<p>同时你需要保存一份包含训练文本的UTF-8的文件，在后面的步骤中将会用到。</p>
+<p><strong>对于大量的训练数据说明.</strong>64个图片是对<strong>字体</strong>个数的限制。每个字体应该放在单一的多页tiff文件中，并且box文件可以对指定页码的字符坐标修改。因此对于给定字体可以创建任意数量的训练数据，也运行对大字符集语言进行训练。对于一个字体，也可以用多个单页tiff文件来代替多页tiff文件, and then you must cat together the tr files for each font into several single-font tr files.不管如何，输入给mftraining的tr文件，必须各自包含单个字体。</p>
+<p>#####6.3.2生成box文件<br>下一步，Tesseract对每个训练图像需要一个’box’文件。box文件是一个文本文件，按序排列了训练图片的字符及字符的外包矩形框坐标。Tesseract3.0有一个模式可以生成所需格式的box文件，然后你需要手动编辑这个box文件，使得正确的字符和位置能够对应。</p>
+<p>对每个训练图片运行如下命令行：<br></p><pre class="prettyprint">tesseract [lang].[fontname].exp[num].tif [lang].[fontname].exp[num] batch.nochop makebox<br></pre><p><br>例如：<br> </p><pre class="prettyprint">tesseract eng.timesitalic.exp0.tif eng.timesitalic.exp0 batch.nochop makebox</pre><p></p>
+<p>现在是最困难的地方。你需要对[lang].[fontname].exp[num].box文件进行编辑，你需要在每一行开始的位置输入正确的UTF-8格式字符，来代替Tesseract自动生成的错误的字符。例如，下面是例子图片eurotext.tif的输出box文件(第141-154行):<br></p><pre class="prettyprint">s 734 494 751 519 0<br>p 753 486 776 518 0<br>r 779 494 796 518 0<br>i 799 494 810 527 0<br>n 814 494 837 518 0<br>g 839 485 862 518 0<br>t 865 492 878 521 0<br>u 101 453 122 484 0<br>b 126 453 146 486 0<br>e 149 452 168 477 0<br>r 172 453 187 476 0<br>d 211 451 232 484 0<br>e 236 451 255 475 0<br>n 259 452 281 475 0<br></pre><p></p>
+<p>由于Tesseract是在英文模式下运行的，它不能正确的识别变音符号。这个需要一个合适的编辑器来输入。一个支持UTF-8的编辑器就够了，HTML编辑器是个不错的选择（linux下的Mozilla可以直接编辑UTF-8文本，Firefox和IE浏览器则不支持）。MS的Word支持不同的字符编码，Notepad++也支持。Linux和Windows都有一个字符列表用来拷贝不能手打的字符。如用ü代替u。</p>
+<p>理论上，每一行都只有一个字符。但是在水平方向上分离的一个字符，可能被单成两个，例如下双引号“„”，你需要合并这两个box：例如，第116-229行：<br></p><pre class="prettyprint">D 101 504 131 535 0<br>e 135 502 154 528 0<br>r 158 503 173 526 0<br>, 197 498 206 510 0<br>, 206 497 214 509 0<br>s 220 501 236 526 0<br>c 239 501 258 525 0<br>h 262 502 284 534 0<br>n 288 501 310 525 0<br>e 313 500 332 524 0<br>l 336 501 347 534 0<br>l 352 500 363 532 0<br>e 367 499 386 524 0<br>” 389 520 407 532 0<br></pre><p></p>
+<p>注意2,3列表示左上角坐标lefttop，4,5列表示右下角坐标rightbottom，最后一列是对应的多页tiff图像中的页码。坐标系以图上左上角为原点。合并后的结果：<br></p><pre class="prettyprint">D 101 504 131 535 0<br>e 135 502 154 528 0<br>r 158 503 173 526 0<br>„ 197 497 214 510 0<br>s 220 501 236 526 0<br>c 239 501 258 525 0<br>h 262 502 284 534 0<br>n 288 501 310 525 0<br>e 313 500 332 524 0<br>l 336 501 347 534 0<br>l 352 500 363 532 0<br>e 367 499 386 524 0<br>” 389 520 407 532 0</pre><p></p>
+<p>已经有许多个可视化Box编辑器，请点击<a href="http://code.google.com/p/tesseract-ocr/wiki/AddOns#Tesseract_box_editors_and_traning_tools" target="_blank" rel="external">AddOns wiki</a>.</p>
+<p>#####6.3.3引导新的字符集<br>如果你训练的是全新的字符集，你可以先使用一种字体来获取box文件，再运行下面的训练步骤生成一个traindata，然后再使用Tesseract处理其他的字体的box文件：<br></p><pre class="prettyprint">tesseract [lang].[fontname].exp[num].tif [lang].[fontname].exp[num] -l yournewlanguage batch.nochop makebox<br></pre><p><br>这样能提高你的box文件中的字符正确率，减少编辑。你可以用这种方法来增加新的字体，但是要注意没有一种训练模式可以在已有的traindata中添加新的训练数据。这意味着每一次你运行mfTraining和cnTraining都是从你提供的tr文件创建一个新的数据文件，并不可以直接在现有的intproto/pffmtable/normproto中直接添加。</p>
+<p>#####6.3.4 tif/box文件要一一对应<br>一些tif/box文件可以在下载页面下载。(注意tif文件经过G4压缩，要使用libtiff进行解压缩)。你可以按照下面操作获取更好的训练数据：</p>
+<ul>
+<li><ol>
+<li>过滤box文件，保留你想要的字符行。</li>
+</ol>
+</li>
+<li><ol>
+<li>运行tesseract进行训练(后面介绍)。</li>
+</ol>
+</li>
+<li><ol>
+<li>在多种语言中获取你想要字符的每种字体的tr文件，并且添加你自己的字体或者字符。</li>
+</ol>
+</li>
+<li><ol>
+<li>以相同的方式获取已过滤的box文件到.tr文件中，以便在unicharset_extractor中处理。</li>
+</ol>
+</li>
+<li><ol>
+<li>进行剩余的训练过程。</li>
+</ol>
+</li>
+</ul>
+<p>注意！这没有想象的那么简单！(cntraining and mftraining can only take up to 64 .tr files, so you must cat all the files from multiple languages for the same font together to make 64 language-combined, but font-individual files. The characters found in the tr files must match the sequence of characters found in the box files when given to unicharset_extractor, so you have to cat the box files together in the same order as the tr files. The command lines for cn/mftraining and unicharset_extractor must be given the .tr and .box files (respectively) in the same order just in case you have different filtering for the different fonts. There may be a program available to do all this and pick out the characters in the style of character map. This might make the whole thing easier)</p>
+<p> <span id="jump">跳转到的地方</span></p>
+<p>####6.4 运行tesseract进行训练</p>
+<p>对每一对训练图片和box文件，运行下面命令行：<br></p><pre class="prettyprint">tesseract [lang].[fontname].exp[num].tif [lang].[fontname].exp[num] box.train<br></pre><p><br>或者<br></p><pre class="prettyprint">tesseract [lang].[fontname].exp[num].tif [lang].[fontname].exp[num] box.train.stderr<br></pre><p><br>第一个命令行会把所有错误信息记录在tesseract.log中。第二个命令行会在stderr中输出。</p>
+<p>注意box文件名和tif文件名要相同，并且在相同路径下，否则Tesseract会找不到。输出文件为fontfile.tr，这个文件保护训练页中每个字符的特征。[lang].[fontname].exp[num].txt will also be written with a single newline and no text.</p>
+<p><strong>重要</strong>的是检查apply_box输出中是否有错误。如果存在FATALITIES报告，那么没有必要继续训练过程指导你修复了box文件。新的box.train.stderr配置文件让输出的定位变得更简单。一个FATALITY通常提示当前步骤在你的box文件中寻找某个字符的训练样本时失败。不是坐标错了，就是图片中对应字符图片出错了。如果一个字符不存在可以操作的样本，它就不能被识别，生产的inttemp文件也不会匹配unicharset文件，Tesseract将中止。</p>
+<p>另一个可能出现的错误也是致命的——“Box file format error on line n”。If preceded by “Bad utf-8 char…” then the utf-8 codes are incorrect and need to be fixed. The error “utf-8 string too long…” indicates that you have exceeded the 24 byte limit on a character description. If you need a description longer than 24 bytes, please file an issue.</p>
+<p>没有必要对[lang].[fontname].exp[num].tr文件的内容进行编辑。下面是tr文件的一些格式：<br></p><pre class="prettyprint">Every character in the box file has a corresponding set of entries in<br>the .tr file (in order) like this<br>UnknownFont <utf8 code(s)=""> 2<br>mf <number of="" features=""><br>x y length dir 0 0<br>… (there are a set of these determined by <number of="" features=""><br>above)<br>cn 1<br>ypos length x2ndmoment y2ndmoment<p></p>
+<p>The mf features are polygon segments of the outline normalized to the<br>1st and 2nd moments.<br>x= x position [-0.5.0.5]<br>y = y position [-0.25, 0.75]<br>length is the length of the polygon segment [0,1.0]<br>dir is the direction of the segment [0,1.0]</p>
+<p>The cn feature is to correct for the moment normalization to<br>distinguish position and size (eg c vs C and , vs ‘)<br></p></number></number></utf8></pre><p></p>
+<p>####6.5 计算字符集<br>Tesseract需要知道它tractor可以输出的字符集。为了生成unicharset数据文件，使用unicharset_ex程序处理box文件：<br></p><pre class="prettyprint">unicharset_extractor lang.fontname.exp0.box lang.fontname.exp1.box …<br></pre><p><br>Tesseract访问字符的属性：isalpha, isdigit, isupper, islower, ispunctuation。该数据而可以以unicharset的数据形式被编码。每一行对应一个字符。UTF-8的后面是表示二进制掩码编码性质的十六进制数。每个bit表示一个属性。如果bit设置为1，表示该属性为真。这些为按顺序排列（从最低位到最高位）: isalpha, islower, isupper, isdigit, ispunctuation。</p>
+<p>例子：</p>
+<ul>
+<li>“;”是标点，它的属性表示为10000(0x10)。</li>
+<li>“b”是字母表中的小写字符，它的属性表示为00011(0x3)。</li>
+<li>“W”属性为00101(0x5)。</li>
+<li>“7”属性为01000(0x8)。</li>
+<li>“=”既不是标点也不是字母，属性为00000(0x0)。<br><p></p><pre class="prettyprint">; 10 Common 46<br>b 3 Latin 59<br>W 5 Latin 40<br>7 8 Common 66<br>= 0 Common 93<br></pre><p></p></li>
+</ul>
+<p>中文和日文的字符也在最低位表示，如00001(0x1)。</p>
+<p>如果你的系统支持宽字符处理函数，这些值都将通过unicharset_extractor自动设置，没有必要自己编辑。老的系统(如Windows95)可能要手动编辑。</p>
+<p><strong>注意</strong>unicharset文件必须在inttemp, normproto和pffmtable生成时重新生成（换言之，这些文件在box文件改变时必须重新创建）。</p>
+<p>最后两列表示脚本类型(Latin, Common, Greek, Cyrillic, Han, null)和给定语言的字符编码。</p>
+<p>#####6.5.1 set_unicharset_properties(3.03版本新增)<br>在3.03中新的工具和数据文件可以用来添加额外的属性，大部分是字符的大小：<br></p><pre class="prettyprint">training/set_unicharset_properties -U input_unicharset -O output_unicharset –script_dir=training/langdata<br></pre><p></p>
+<p>####6.6 font_properties(3.01版本新增)<br>在3.01中训练过程需要font_properties文件。这个文件的目的是提供字体信息，以便在识别出来的结果中给出字体信息。font_properties是通过mftraining的-F filename选项处理的文本文件。</p>
+<p>font_properties每一行的格式为：<br></p><pre class="prettyprint">&lt;fontname&gt; &lt;italic&gt; &lt;bold&gt; &lt;fixed&gt; &lt;serif&gt; &lt;fraktur&gt;</pre><p></p>
+<p>其中&lt;fontname&gt;是一个字符串(不能有空格)，其他&lt;italic&gt; &lt;bold&gt; &lt;fixed&gt; &lt;serif&gt; &lt;fraktur&gt;都是以0,1标记，表示该字体是否有该属性。</p>
+<p>当运行mftraining时，每个.tr文件名必须对应一个font_properties文件，否则将中止。</p>
+<p>例子：<br>font_properties文件：<br></p><pre class="prettyprint">timesitalic 1 0 0 1 0<br></pre><p></p>
+<p></p><pre class="prettyprint">shapeclustering -F font_properties -U unicharset eng.timesitalic.exp0.tr<br>mftraining -F font_properties -U unicharset -O eng.unicharset eng.timesitalic.exp0.tr<br></pre><p></p>
+<p><strong>注意</strong>在3.03中，training/langdata/font_properties是默认的font_properties文件，包含3000个字体(不一定需要)。</p>
+<p>####6.7 聚类<br>当所有的训练页中的字符特征已将被提取，我们需要对它们进行聚类。字符形状可以通过 shapeclustering (3.02版本后允许), mftraining and cntraining programs程序进行聚类：<br></p><pre class="prettyprint">shapeclustering -F font_properties -U unicharset lang.fontname.exp0.tr lang.fontname.exp1.tr …<br></pre><p></p>
+<p>shapeclustering通过形状聚类创建一个主字形表，并且写入文件-shapetable。</p>
+<p><strong>注意：</strong>如果你没有运行shapeclustering,mftraining也会产生一个shapetable.你<strong>必须</strong>在你的traindata中包含这个shapetable，不管shapeclustering是否运行过。<br></p><pre class="prettyprint">mftraining -F font_properties -U unicharset -O lang.unicharset lang.fontname.exp0.tr lang.fontname.exp1.tr …<br></pre><p></p>
+<p>-U 文件表示由上面的unicharset_extractor生成的unicharset，lang.unicharset是输出文件，提供给combine_tessdata处理。mftraining会输出另外两个数据文件：inttemp(字符形状原型the shape prototypes)和pffmtable(每个字符期望的特征个数the number of expected features for each character)。（另外一个文件Microfeat也会生成，但是没有用。）</p>
+<p></p><pre class="prettyprint">cntraining lang.fontname.exp0.tr lang.fontname.exp1.tr …<br></pre><p><br>这个生成normproto数据文件（字符归一化敏感度原型the character normalization sensitivity prototypes）。</p>
+<p>####6.8 字典数据(可选)<br>Tesseract为每个语言最多使用8个字典文件。它们都是可选的，用来帮助Tesseract不同字符组合的可能性。</p>
+<p>有7个文件编码为Directed Acyclic Word Graph(DAWG)，另一个是简单的UTF-8文本：</p>
+<p>为了生成DAWG字典文件，你首先需要你所训练语言的单词表。你可以从拼写检查中发现一个合适的字典(如ispell, aspell和hunspell)————注意license。单词表用UTF-8的格式表示的话一个单词一行。把单词量拆成需要的集合，如：频繁出现的单词，剩余的单词，然后使用wordlist2dawg用来生成DAWG文件：</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th style="text-align:center">Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>word-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>A dawg made from dictionary words from the language.</td>
+</tr>
+<tr>
+<td>freq-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>A dawg made from the most frequent words which would have gone into word-dawg.</td>
+</tr>
+<tr>
+<td>punc-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>A dawg made from punctuation patterns found around words. The “word” part is replaced by a single space.</td>
+</tr>
+<tr>
+<td>number-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>A dawg made from tokens which originally contained digits. Each digit is replaced by a space character.</td>
+</tr>
+<tr>
+<td>fixed-length-dawgs</td>
+<td style="text-align:center">dawg</td>
+<td>Several dawgs of different fixed lengths —— useful for languages like Chinese.</td>
+</tr>
+<tr>
+<td>bigram-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>A dawg of word bigrams where the words are separated by a space and each digit is replaced by a ?.</td>
+</tr>
+<tr>
+<td>unambig-dawg</td>
+<td style="text-align:center">dawg</td>
+<td>TODO: Describe.</td>
+</tr>
+<tr>
+<td>user-words</td>
+<td style="text-align:center">dawg</td>
+<td>A list of extra words to add to the dictionary. Usually left empty to be added by users if they require it; see tesseract(1).</td>
+</tr>
+</tbody>
+</table>
+<p></p><pre class="prettyprint">wordlist2dawg frequent_words_list lang.freq-dawg lang.unicharset<br>wordlist2dawg words_list lang.word-dawg lang.unicharset<br></pre><p></p>
+<p><strong>注意</strong>如果合并的traindata中包含字典，字典不能为空。</p>
+<p>如果你需要字典的例子文件，解压(通过<a href="http://tesseract-ocr.googlecode.com/svn-history/r800/trunk/doc/combine_tessdata.1.html" target="_blank" rel="external">combine_tessdata</a>)已有的语言文件(如eng.traineddata)并且使用<a href="http://tesseract-ocr.googlecode.com/svn-history/trunk/doc/dawg2wordlist.1.html" target="_blank" rel="external">dawg2wordlist</a>提取单词表。</p>
+<p>####6.9 最后一个文件(unicharambigs)<br>这个文件描述了字符之间的模糊集。通常都是手动生成。为了理解格式，查看以下示例：<br></p><pre class="prettyprint">v1<br>2       ‘ ‘     1       “       1<br>1       m       2       r n     0<br>3       i i i   1       m       0<br></pre><p><br>第一行是一个版本标识符。下面的行以tab制表符分割，使用下面的格式:</p>
+<p><number of="" characters="" for="" match="" source=""></number></p>
+<p><tab></tab></p>
+<p><characters for="" match="" source=""></characters></p>
+<p><tab></tab></p>
+<p><characters for="" match="" target=""></characters></p>
+<p><tab></tab></p>
+<p><type indicator=""><br>type indicator可以有下面的值：</type></p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>A non-mandatory substitution. This informs tesseract to consider the ambiguity as a hint to the segmentation search that it should continue working if replacement of ‘source’ with ‘target’ creates a dictionary word from a non-dictionary word. Dictionary words that can be turned to another dictionary word via the ambiguity will not be used to train the adaptive classifier.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>A mandatory substitution. This informs tesseract to always replace the matched ‘source’ with the ‘target’ strings.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Example line</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 ‘ ‘ 1 “ 1</td>
+<td>A double quote (“) should be substituted whenever 2 consecutive single quotes (‘) are seen.</td>
+</tr>
+<tr>
+<td>1 m 2 r n 0</td>
+<td>The characters ‘rn’ may sometimes be recognized incorrectly as ‘m’.</td>
+</tr>
+<tr>
+<td>3 i i i 1 m 0</td>
+<td>The character ‘m’ may sometimes be recognized incorrectly as the sequence ‘iii’.</td>
+</tr>
+</tbody>
+</table>
+<p>每个字符都必须在unicharset中有包含。就是说，这些字符都应该是训练语言的一部分。</p>
+<p>3.03版本支持新的更简单的格式：<br></p><pre class="prettyprint">v2<br>‘’ “ 1<br>m rn 0<br>iii m 0<br></pre><p><br>其中1表示强制，0表示可选。</p>
+<p>unicharambigs文件也是可选的。</p>
+<p>####6.10 合并所有文件<br>全部情况就这样！现在你只需要合并所有的文件(shapetable, normproto, inttemp, pffmtable)，用相同的前缀重命名它们，如lang.，这里的lang是3个字符码，对于你要训练的语言名字，可以在<a href="http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes" target="_blank" rel="external"> http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes</a>中找到对应的。然后运行combine_tessdata:<br></p><pre class="prettyprint">combine_tessdata lang.<br></pre><p></p>
+<p><strong>注意：不要忘记最后一个点！</strong><br>结果的lang.traineddata在你的tessdata目录中。然后你就可以用你训练的语言识别文本了：<br></p><pre class="prettyprint">tesseract image.tif output -l lang<br></pre><p></p>
+<p>更多的选项请请参考combine_tessdata的<a href="http://tesseract-ocr.googlecode.com/svn-history/trunk/doc/combine_tessdata.1.html" target="_blank" rel="external">手册</a>或者源码。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/翻译/">翻译</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Tesseract/">Tesseract</a><a href="/tags/OCR/">OCR</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2015/11/01/Tesseract3训练新语言/" data-title="Tesseract3训练新语言 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/11/25/Canny算法原理及实现/" title="Canny算法原理及实现">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Canny算法原理及实现</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/"  title="专利学习——Using Low Discrepancy Sequences to Match Template">
+ <strong>下一篇：</strong><br/> 
+ <span>专利学习——Using Low Discrepancy Sequences to Match Template
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2015/11/01/Tesseract3训练新语言/" data-title="Tesseract3训练新语言" data-url="http://www.yanghespace.com/2015/11/01/Tesseract3训练新语言/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>

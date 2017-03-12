@@ -1,0 +1,889 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Zbar库EAN解码原理及代码分析 | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="Zbar是开源的条码解码库，类似的开源库有ZXing。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Zbar库EAN解码原理及代码分析">
+<meta property="og:url" content="http://www.yanghespace.com/2016/05/29/Zbar库EAN解码原理及代码分析/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="Zbar是开源的条码解码库，类似的开源库有ZXing。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。">
+<meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgcxcbncg2073046t8k.gif">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgfd2lfog20ba04s0sm.gif">
+<meta property="og:updated_time" content="2016-06-06T13:57:26.076Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Zbar库EAN解码原理及代码分析">
+<meta name="twitter:description" content="Zbar是开源的条码解码库，类似的开源库有ZXing。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。">
+<meta name="twitter:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgcxcbncg2073046t8k.gif">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/05/29/Zbar库EAN解码原理及代码分析/" title="Zbar库EAN解码原理及代码分析" itemprop="url">Zbar库EAN解码原理及代码分析</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2016-05-29T10:26:11.000Z" itemprop="datePublished"> 发表于 2016-05-29</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p><a href="http://zbar.sourceforge.net/" target="_blank" rel="external">Zbar</a>是开源的条码解码库，类似的开源库有<a href="https://github.com/zxing/zxing" target="_blank" rel="external">ZXing</a>。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。</p>
+<a id="more"></a>
+<p>##EAN-13码<br>关于条码的相关知识除了wikipedia上面的介绍外，推荐几个不错的链接：<br>1.<a href="http://www.appsbarcode.com/barcode-encode.php" target="_blank" rel="external">條碼編碼規則</a><br>2.<a href="http://www.barcodeisland.com/symbolgy.phtml" target="_blank" rel="external">barcode island</a></p>
+<p>这些链接资料包含了条码的发展历程、解码规则以及应用领域。下面对EAN-13进行一个简单的介绍，这些介绍仅仅能够让读者对接下来的解码算法能够正常理解。</p>
+<p>###简介<br>EAN全称European Article Number，只能对数字进行编码，根据长度分为EAN-13, EAN-8两种编码方式（这两种码并不能相互转换），EAN-13码由13个数字组成。它的基本结构如下：</p>
+<p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgcxcbncg2073046t8k.gif" width="25%"><br>    <br>    <small> ean-13基本结构 </small><br></p>
+
+<p>Number System由2~3个数字组成，表示国家地区（注意第一位Number System并没有编码成条码，也就是说图片中第一个数字7没有对应的bar和space），Manufacture Code为厂商码，Product Code为产品码，最后一位是校验码。每个字元由2个bar, 2个space组成。1个字元由7个module宽度构成，每个module我们用0/1表示。其中1表示bar的module，0表示space的module。</p>
+<p>一个EAN-13码的基本结构为：<br>-左护线(left-hand guard bars)，编码为101<br>-左资料码<br>-中线(center guard pattern), 编码为01010<br>-右资料码<br>-右护线(right-hand guard bars)</p>
+<p>###编码表<br>下面给出最关键的编码规则（下面描述中称为表-1）：</p>
+<table>
+<thead>
+<tr>
+<th>DIGIT</th>
+<th style="text-align:center">LEFT-HAND ENCODING</th>
+<th style="text-align:left">RIGHT-HAND ENCODING</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td style="text-align:center">ODD PARITY (A)  EVEN PARITY (B)</td>
+<td style="text-align:left">ALL CHARACTERS (C)</td>
+</tr>
+<tr>
+<td>0</td>
+<td style="text-align:center">0001101    0100111</td>
+<td style="text-align:left">1110010</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align:center">0011001    0110011</td>
+<td style="text-align:left">1100110</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">0010011    0011011</td>
+<td style="text-align:left">1101100</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">0111101    0100001</td>
+<td style="text-align:left">1000010</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center">0100011    0011101</td>
+<td style="text-align:left">1011100</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">0110001    0111001</td>
+<td style="text-align:left">1001110</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">0101111    0000101</td>
+<td style="text-align:left">1010000</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align:center">0111011    0010001</td>
+<td style="text-align:left">1000100</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align:center">0110111    0001001</td>
+<td style="text-align:left">1001000</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align:center">0001011    0010111</td>
+<td style="text-align:left">1110100</td>
+</tr>
+</tbody>
+</table>
+<p>左编码区包含两种编码方式，Odd Parity（奇校验，bar的宽度相加是奇数）和Even Parity，左编码区的编码方式由第一位Number System数字确定。右编码区就一种编码方式。</p>
+<p>每个bar和space的宽度不会超过4个module。同时可以注意到Type C的编码表为Type A的取反，Type C倒过来便是Type B。同时左编码区都是从”0”开始，右编码区都是从”1”开始。这个是由于左护线为”101”，中线为”01010”。</p>
+<p>下面这张表就是关于左编码区如何根据第一位Number System数字进行编码的（下面描述中称为表-2）：</p>
+<table>
+<thead>
+<tr>
+<th>FIRST NUMBER SYSTEM DIGIT</th>
+<th style="text-align:center">SECOND NUMBER SYSTEM DIGIT</th>
+<th style="text-align:center">1</th>
+<th style="text-align:center">2</th>
+<th style="text-align:center">3</th>
+<th style="text-align:center">4</th>
+<th style="text-align:left">5 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0(UPC-A)</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:left">Odd</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:left">Even</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:left">Even</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:left">Odd</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:left">Even</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:left">Even</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:left">Odd</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:left">Even</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:left">Odd</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:center">Odd</td>
+<td style="text-align:center">Even</td>
+<td style="text-align:left">Odd</td>
+</tr>
+</tbody>
+</table>
+<p>###例子<br>这里对上图中的”7-501031-311309”进行编码。</p>
+<p>根据第二张表，第一位Number System为7，对应的左手编码方式为”Odd/Even/Odd/Even/Odd/Even”。每一位数字的编码为：</p>
+<p>1.左护线 (总是相同的): 101.<br>2.第二位Number System[5]: 按照Type A进行编码, 0110001.<br>3.厂商码第1个位 [0]: 按照Type B进行编码, 0100111.<br>4.厂商码第2个位 [1]: 按照Type A进行编码, 0011001.<br>5.厂商码第3个位 [0]: 按照Type B进行编码, 0100111.<br>6.厂商码第4个位 [3]: 按照Type A进行编码, 0111101.<br>7.厂商码第5个位 [1]: 按照Type B进行编码, 0110011.<br>8.中线 (总是相同的): 01010.<br>9.产品码第1个位 [3]: 按照Type C进行编码, 1000010.<br>10.产品码第2个位 [1]: 按照Type C进行编码, 1100110.<br>11.产品码第3个位 [1]: 按照Type C进行编码, 1100110.<br>12.产品码第4个位 [3]: 按照Type C进行编码, 1000010.<br>13.产品码第5个位 [0]: 按照Type C进行编码, 1110010.<br>14.校验位 [9]: 按照Type C进行编码, 1110100.<br>15.右护线 (总是相同的): 101.</p>
+<p>你可以和下图进行比对：</p>
+<p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgfd2lfog20ba04s0sm.gif" width="30%"><br>    <br>    <small> ean-13编码 </small><br></p>
+
+
+<p>##Zbar EAN解码算法<br>事实上解码的过程主要依赖表-1，表-2只是起验证作用。表-1中每个编码方式都是不一样的，我们只要对扫描到的条码宽度按照上面的比例计算最接近的编码格式就好。</p>
+<p>在Zbar中，具体是这么操作的：<br>1.首先我们先把表-1转换成宽度的格式进行编码；<br>2.然后对于左编码区，将最后3个宽度两两相加，对于右编码区，将前三个宽度两两相加（我们统一将中间两个宽度相加的结果放在最后）。以数字0为例，左编码区（奇校验）的宽度为3211, 后两个宽度相加为2，中间宽度相加为3，得到相加后的编码为23。</p>
+<table>
+<thead>
+<tr>
+<th>DIGIT</th>
+<th style="text-align:center">LEFT-HAND ENCODING</th>
+<th style="text-align:left">RIGHT-HAND ENCODING</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td style="text-align:center">ODD PARITY (A)  EVEN PARITY (B)</td>
+<td style="text-align:left">ALL CHARACTERS (C)</td>
+</tr>
+<tr>
+<td>0</td>
+<td style="text-align:center">3211(23)    1123(53)</td>
+<td style="text-align:left">3211(53)</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align:center">2221(34)    1222(44)</td>
+<td style="text-align:left">2221(44)</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">2122(43)    2212(33)</td>
+<td style="text-align:left">2122(33)</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">1411(25)    1141(55)</td>
+<td style="text-align:left">1411(55)</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center">1132(54)    2311(24)</td>
+<td style="text-align:left">1132(24)</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">1231(45)    1321(35)</td>
+<td style="text-align:left">1231(35)</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">1114(52)    4111(22)</td>
+<td style="text-align:left">1114(22)</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align:center">1312(34)    2131(44)</td>
+<td style="text-align:left">1312(44)</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align:center">1213(43)    3121(33)</td>
+<td style="text-align:left">1213(33)</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align:center">3112(32)    2113(42)</td>
+<td style="text-align:left">3112(42)</td>
+</tr>
+</tbody>
+</table>
+<p>注意到上面的编码中，Type B和Type C转换后编码效果是一样的。在Type A中，34,44这两个编码重复了。在Type B中，44,33这两个编码重复了。对于重复的情况，比如Type A的34，对应2221及1312，我们考虑第二位及第四位的相加和，分别为3,5。通过这个进一步区分这些重复的编码。</p>
+<p>在Zbar源码中，ean.c里面，压缩编码表后得到：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* convert compact encoded D2E1E2 to character (bit4 is parity) */</span></div><div class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> digits[] = &#123;  <span class="comment">/* E1   E2 */</span>                      </div><div class="line">    <span class="number">0x06</span>, <span class="number">0x10</span>, <span class="number">0x04</span>, <span class="number">0x13</span>,              <span class="comment">/*  2  2-5 */</span></div><div class="line">    <span class="number">0x19</span>, <span class="number">0x08</span>, <span class="number">0x11</span>, <span class="number">0x05</span>,              <span class="comment">/*  3  2-5 (d2 &lt;= thr) */</span></div><div class="line">    <span class="number">0x09</span>, <span class="number">0x12</span>, <span class="number">0x07</span>, <span class="number">0x15</span>,              <span class="comment">/*  4  2-5 (d2 &lt;= thr) */</span></div><div class="line">    <span class="number">0x16</span>, <span class="number">0x00</span>, <span class="number">0x14</span>, <span class="number">0x03</span>,              <span class="comment">/*  5  2-5 */</span></div><div class="line">    <span class="number">0x18</span>, <span class="number">0x01</span>, <span class="number">0x02</span>, <span class="number">0x17</span>,              <span class="comment">/* E1E2=43,44,33,34 (d2 &gt; thr) */</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure></p>
+<p>其中，第一个字节用来表示奇偶校验，第二个字节表示解码结果。</p>
+<p>关于解码的代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* attempt to decode previous 4 widths (2 bars and 2 spaces) as a characterv*/</span></div><div class="line"><span class="keyword">static</span> __<span class="function"><span class="keyword">inline</span> <span class="keyword">signed</span> <span class="keyword">char</span> <span class="title">decode4</span> <span class="params">(<span class="keyword">zbar_decoder_t</span> *dcode)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">signed</span> <span class="keyword">char</span> code;</div><div class="line"></div><div class="line">    <span class="comment">/* calculate similar edge measurements */</span></div><div class="line">    <span class="keyword">unsigned</span> e1 = ((get_color(dcode) == ZBAR_BAR)<span class="comment">// 当前解码位置是条还是空，对于左编码区为101+sbsb；右编码区为：01010+bsbs(b表示bar，s表示space)</span></div><div class="line">                   ? get_width(dcode, <span class="number">0</span>) + get_width(dcode, <span class="number">1</span>)</div><div class="line">                   : get_width(dcode, <span class="number">2</span>) + get_width(dcode, <span class="number">3</span>));</div><div class="line">    <span class="keyword">unsigned</span> e2 = get_width(dcode, <span class="number">1</span>) + get_width(dcode, <span class="number">2</span>);</div><div class="line">    dbprintf(<span class="number">2</span>, <span class="string">"\n        e1=%d e2=%d"</span>, e1, e2);</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(dcode-&gt;ean.s4 &lt; <span class="number">6</span>)<span class="comment">//累计元素宽度太小就退出</span></div><div class="line">        <span class="keyword">return</span>(<span class="number">-1</span>);</div><div class="line"></div><div class="line">    <span class="comment">/* create compacted encoding for direct lookup 将e1和e2压缩适应查表*/</span></div><div class="line">    code = ((decode_e(e1, dcode-&gt;ean.s4, <span class="number">7</span>) &lt;&lt; <span class="number">2</span>) |</div><div class="line">             decode_e(e2, dcode-&gt;ean.s4, <span class="number">7</span>));<span class="comment">//(e1&lt;&lt;2) | e2,其中e1,e2的值为1或2，其他值(负数)都是无效</span></div><div class="line">    <span class="keyword">if</span>(code &lt; <span class="number">0</span>)</div><div class="line">        <span class="keyword">return</span>(<span class="number">-1</span>);</div><div class="line">    dbprintf(<span class="number">2</span>, <span class="string">" code=%x"</span>, code);</div><div class="line"></div><div class="line">    <span class="comment">/* 4 combinations require additional determinant (D2)</span></div><div class="line">       E1E2 == 34 (0110)  6</div><div class="line">       E1E2 == 43 (1001)  9</div><div class="line">       E1E2 == 33 (0101)  5</div><div class="line">       E1E2 == 44 (1010)  10</div><div class="line">     */</div><div class="line">    <span class="comment">/* 0x0660 = 0000 0110 0110 0000 */</span></div><div class="line">    <span class="keyword">if</span>((<span class="number">1</span> &lt;&lt; code) &amp; <span class="number">0x0660</span>) &#123;<span class="comment">//如果不为0，表示code落在E1 E2的码表里，因为1&lt;&lt;6,1&lt;&lt;9,1&lt;&lt;5,1&lt;&lt;10都是在码表里0x660=(1&lt;&lt;6 | 1&lt;&lt;5 | 1&lt;&lt;9 | 1&lt;&lt;10)</span></div><div class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> mid, alt;</div><div class="line">        <span class="comment">/* use sum of bar widths 计算2bar宽度和*/</span></div><div class="line">        <span class="keyword">unsigned</span> d2 = ((get_color(dcode) == ZBAR_BAR)</div><div class="line">                       ? get_width(dcode, <span class="number">0</span>) + get_width(dcode, <span class="number">2</span>)</div><div class="line">                       : get_width(dcode, <span class="number">1</span>) + get_width(dcode, <span class="number">3</span>));</div><div class="line">        d2 *= <span class="number">7</span>;<span class="comment">//放大模块条数的倍数</span></div><div class="line">        <span class="comment">/* 0x0420 = 0000 0100 0010 0000 */</span></div><div class="line">        mid = (((<span class="number">1</span> &lt;&lt; code) &amp; <span class="number">0x0420</span>)<span class="comment">//code为5,10才为真，即33，44；其他时候6，9</span></div><div class="line">                             ? <span class="number">3</span>     <span class="comment">/* E1E2 in 33,44; 如果为33, 44, d2的值是2或4*/</span></div><div class="line">                             : <span class="number">4</span>);   <span class="comment">/* E1E2 in 34,43; 如果是34, 43, d2的值是3或5*/</span></div><div class="line">        alt = d2 &gt; (mid * dcode-&gt;ean.s4);<span class="comment">//阈值为mid*s4(2bar2space),d2为2bar*7</span></div><div class="line">        <span class="keyword">if</span>(alt)</div><div class="line">            code = ((code &gt;&gt; <span class="number">1</span>) &amp; <span class="number">3</span>) | <span class="number">0x10</span>; <span class="comment">/* compress code space */</span></div><div class="line">                                             <span class="comment">/* E1E2 = 0001 0011 (19)</span></div><div class="line">                                              *        0001 0000 (16)</div><div class="line">                                              *        0001 0010 (18)</div><div class="line">                                              *        0001 0001 (17)</div><div class="line">                                              */</div><div class="line"></div><div class="line">        dbprintf(<span class="number">2</span>, <span class="string">" (d2=%d(%d) alt=%d)"</span>, d2, mid * dcode-&gt;ean.s4, alt);</div><div class="line">    &#125;</div><div class="line">    dbprintf(<span class="number">2</span>, <span class="string">" char=%02x"</span>, digits[(<span class="keyword">unsigned</span> <span class="keyword">char</span>)code]);</div><div class="line">    zassert(code &lt; <span class="number">0x14</span>, <span class="number">-1</span>, <span class="string">"code=%02x e1=%x e2=%x s4=%x color=%x\n"</span>,</div><div class="line">            code, e1, e2, dcode-&gt;ean.s4, get_color(dcode));</div><div class="line">    <span class="keyword">return</span>(code);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/机器视觉算法/">机器视觉算法</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/barcode/">barcode</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2016/05/29/Zbar库EAN解码原理及代码分析/" data-title="Zbar库EAN解码原理及代码分析 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/08/18/findCirclesGrid源码分析/" title="findCirclesGrid源码分析">
+  <strong>上一篇：</strong><br/>
+  <span>
+  findCirclesGrid源码分析</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/05/25/OpenCV源码调试跟踪/"  title="OpenCV源码调试跟踪">
+ <strong>下一篇：</strong><br/> 
+ <span>OpenCV源码调试跟踪
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/05/29/Zbar库EAN解码原理及代码分析/" data-title="Zbar库EAN解码原理及代码分析" data-url="http://www.yanghespace.com/2016/05/29/Zbar库EAN解码原理及代码分析/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>

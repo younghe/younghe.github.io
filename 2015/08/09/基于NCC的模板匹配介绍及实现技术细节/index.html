@@ -1,0 +1,763 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>基于NCC的模板匹配介绍及实现技术细节 | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于NCC的模板匹配介绍及实现技术细节">
+<meta property="og:url" content="http://www.yanghespace.com/2015/08/09/基于NCC的模板匹配介绍及实现技术细节/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgoioygxj21kw0epgqu.jpg">
+<meta property="og:image" content="http://www.opencv.org.cn/opencvdoc/2.3.2/html/_images/Pyramids_Tutorial_Pyramid_Theory.png">
+<meta property="og:updated_time" content="2016-06-05T09:23:57.717Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于NCC的模板匹配介绍及实现技术细节">
+<meta name="twitter:description" content="模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。">
+<meta name="twitter:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgoioygxj21kw0epgqu.jpg">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2015/08/09/基于NCC的模板匹配介绍及实现技术细节/" title="基于NCC的模板匹配介绍及实现技术细节" itemprop="url">基于NCC的模板匹配介绍及实现技术细节</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2015-08-09T15:00:01.000Z" itemprop="datePublished"> 发表于 2015-08-09</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p>模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。</p>
+<a id="more"></a>
+<p>##1.模板匹配简介#</p>
+<p>模板匹配（Template Matching）是在目标图像中快速定位模板图像的一种技术，这种技术非常广泛的应用在实际的机器视觉应用当中。比如在各种的质量检测或者识别应用中定位参考目标的位置，如下面左图中在快递单中定位logo，右图中清点工件的个数：</p>
+<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgoioygxj21kw0epgqu.jpg" width="100%"><br>    <br>    <small> 模板匹配实际应用 </small><br></p>
+
+
+<p>本文将介绍一种最简单的模板匹配技术，基于NCC模板匹配。<br>不凡假设模板的大小是mxm, 目标图像的大小是nxn，n&gt;m。我们这里先不考虑旋转和缩放的情况，一种最简单的想法就是在nxn的目标图像中用mxm的窗口遍历图像，比较每个位置的窗口图像和模板图像的差异。自然而然可以想到计算每个像素差的平方和来表示目标和模板的差异：</p>
+<p>$$d_{f,t}^2(u,v)=\sum_{x,y}[f(x,y)-t(x-u,y-u)]^2$$</p>
+<p>将上述式子展开：</p>
+<p>$$d_{f,t}^2(u,v)=\sum_{x,y}(f^2(x,y) - 2f(x,y)t(x-u,y-u) + t^2(x-u,y-v))$$</p>
+<p>其中 $\sum t^2(x-u,y-v)$ 是常量。如果式子$\sum f^2(x,y)$近似常量的话，剩下的cross correlation:<br>$$c(u,v) = \sum_{x,y}f(x,y)t(x-u,y-u)$$<br>就可以作为目标和模板的匹配度量。</p>
+<p>实际上$\sum f^2(x,y)$不会是常量，如果仅使用cross correlation作为度量会有问题。比如全白的图像的匹配值会比实际匹配目标的匹配值高，而且$c(u,v)$的值会受模板大小的影响，同时会对光线非常敏感。因此，需要对cross correlation进行归一化：<br>$$\gamma(u,v) = \frac{\sum_{x,y}[f(x,y)-\overline{f}_{u,v}][t(x-u,y-v)-\overline{t}]}{\sqrt{\sum_{x,y}[f(x,y)-\overline{f}_{u,v}]^2[t(x-u,y-v)-\overline{t}]^2}}$$<br>其中${ \overline{t} }$是模板图像的平均值，${ \overline{f}_{u,v} }$是搜索窗口图像的平均值。得到的这个匹配度量称为归一化相关系数（Normalized cross correlation）,它能够有效的避免上述问题，是一个非常实用的匹配度量。同时我们注意NCC度量的范围在[-1,1]。</p>
+<p>##2.NCC算法实现#<br>如果直接实现NCC算法，无疑会产生巨大的运算量。因此下面将会提到两种方法来提高匹配的性能。</p>
+<p>#####2.1快速傅里叶变换计算卷积#####<br>快速傅里叶变换在图像处理中的应用（目前我了解的）有两个：用来过滤图像，如过滤桌面的纹理，使得目标能够更好的被分割。另一个就是用来快速计算卷积。（关于傅里叶变换的相关实现以后细讲）</p>
+<p>上述NCC度量公式可以展开后可以得到：<br>记$f’(x,y) \equiv f(x,y)-\overline{f}_{u,v}$</p>
+<p>$$ 分子 = \sum_{x,y}f’(x,y)t(x-u,y-v)$$</p>
+<p>$$ 分母 = \sqrt{\sum_{x,y}[t(x-u,y-v)-\overline{t}]^2[f^2(x,y)-\overline{f}_{u,v}^2]}$$<br>(推倒过程并不复杂，略去)</p>
+<p>分子注意到是一个卷积的形式，可以用快速傅里叶变换来进行计算。分母中$\sum_{x,y}[t(x-u,y-v)-\overline{t}]^2  (1)$和$\overline{f}_{u,v}$可以事先计算好。对于$f^2(x,y)$可以用积分图来进行快速计算。下面给出OpenCV关于NCC的实现，下面关键地方给出注释：</p>
+<pre><code>//快速傅里叶变换计算卷积，结果存放在result中
+crossCorr( img, templ, result, result.size(), result.type(), Point(0,0), 0, 0);
+
+if( method == CV_TM_CCORR )
+    return;
+
+double invArea = 1./((double)templ.rows * templ.cols);
+double invArea = 1./((double)templ.rows * templ.cols);
+
+Mat sum, sqsum;
+Scalar templMean, templSdv;
+double *q0 = 0, *q1 = 0, *q2 = 0, *q3 = 0;
+double templNorm = 0, templSum2 = 0;
+
+if( method == CV_TM_CCOEFF )
+{
+    integral(img, sum, CV_64F);
+    templMean = mean(templ);
+}
+else//以下是NCC实现，支持彩色图像
+{
+    integral(img, sum, sqsum, CV_64F);//计算积分图像，sum为f(x,y)积分图，sqsum为f^2(x,y)积分图
+    meanStdDev( templ, templMean, templSdv );
+
+    //模板的方差，用来计算分母中的(1)
+    templNorm = templSdv[0]*templSdv[0] + templSdv[1]*templSdv[1] + templSdv[2]*templSdv[2] + templSdv[3]*templSdv[3];
+
+    if( templNorm &lt; DBL_EPSILON &amp;&amp; method == CV_TM_CCOEFF_NORMED )
+    {
+        result = Scalar::all(1);
+        return;
+    }
+
+    templSum2 = templNorm + templMean[0]*templMean[0] + templMean[1]*templMean[1] + templMean[2]*templMean[2] + templMean[3]*templMean[3];
+
+    if( numType != 1 )
+    {
+        templMean = Scalar::all(0);
+        templNorm = templSum2;
+    }
+
+    templSum2 /= invArea;
+    templNorm = std::sqrt(templNorm);
+    templNorm /= std::sqrt(invArea); // care of accuracy here
+
+    q0 = (double*)sqsum.data;
+    q1 = q0 + templ.cols*cn;  // The first row and column of the integral image are all zeros
+    q2 = (double*)(sqsum.data + templ.rows*sqsum.step);
+    q3 = q2 + templ.cols*cn;  
+}
+
+double* p0 = (double*)sum.data;
+double* p1 = p0 + templ.cols*cn;
+double* p2 = (double*)(sum.data + templ.rows*sum.step);
+double* p3 = p2 + templ.cols*cn;
+
+int sumstep = sum.data ? (int)(sum.step / sizeof(double)) : 0;
+int sqstep = sqsum.data ? (int)(sqsum.step / sizeof(double)) : 0;
+
+int i, j, k;
+
+for( i = 0; i &lt; result.rows; i++ )
+{
+    float* rrow = result.ptr&lt;float&gt;(i);
+    int idx = i * sumstep;
+    int idx2 = i * sqstep;
+
+    for( j = 0; j &lt; result.cols; j++, idx += cn, idx2 += cn )
+    {
+        double num = rrow[j], t;
+        double wndMean2 = 0, wndSum2 = 0;
+
+        if( numType == 1 )
+        {
+            for( k = 0; k &lt; cn; k++ )
+            {
+                t = p0[idx+k] - p1[idx+k] - p2[idx+k] + p3[idx+k];
+                wndMean2 += t*t;
+                num -= t*templMean[k];
+            }
+
+            wndMean2 *= invArea;
+        }
+
+        if( isNormed || numType == 2 )
+        {
+            for( k = 0; k &lt; cn; k++ )
+            {
+                t = q0[idx2+k] - q1[idx2+k] - q2[idx2+k] + q3[idx2+k];
+                wndSum2 += t;
+            }
+
+            if( numType == 2 )
+            {
+                num = wndSum2 - 2*num + templSum2;
+                num = MAX(num, 0.);
+            }
+        }
+
+        if( isNormed )
+        {
+            t = std::sqrt(MAX(wndSum2 - wndMean2,0))*templNorm;//分母项结果
+            if( fabs(num) &lt; t )
+                num /= t;
+            else if( fabs(num) &lt; t*1.125 )
+                num = num &gt; 0 ? 1 : -1;
+            else
+                num = method != CV_TM_SQDIFF_NORMED ? 0 : 1;
+        }
+
+        rrow[j] = (float)num;
+    }
+}
+</code></pre><p>#####2.2 图像金字塔#####<br>即使采用了上述的方法优化性能，所需的计算量也是极大的，因为要在所有的图像位置全部计算出匹配度量。为了节约开销，可以构建图像金字塔。</p>
+<p></p><p align="center"><br>    <img src="http://www.opencv.org.cn/opencvdoc/2.3.2/html/_images/Pyramids_Tutorial_Pyramid_Theory.png" width="30%"><br>    <br>    <small> 金字塔图像 </small><br></p><br>最底层（第0层）为原始图像，每往上一层，图像宽度高度缩小一倍，图像大小缩小4倍。<br>我们根据模板大小选择金字塔的层数，一般构造2~3层金字塔。<br>在金字塔的顶层，对所有的图像位置计算匹配度量。我们选择合适的阈值过滤匹配度量，对过滤后的图像选取局部最大值作为潜在的匹配点。然后根据潜在匹配点的位置，逐层向下搜索，在下面一层我们只需要在潜在匹配点一定范围进行搜索，一般来说10x10的范围已经十分足够了。<br>因此我们可以看到，假设金字塔构建了3层，那么大约计算量缩小了4x4x4=64倍。这是非常巨大的性能优化，可以说如果没有这一步的优化，NCC难以在实际中应用。当然这里的图像金字塔的方法也可以被其他方法替代。<br>同时，这个图像金字塔在其他的匹配中也可以应用到，比如基于边缘的模板匹配，基于彩色信息的模板匹配等等。这是一个非常使用的优化技术。<p></p>
+<p>#####2.3 旋转匹配#####<br>事实上，以上的介绍的模板匹配并没有考虑旋转目标的匹配。这实现起来会更加复杂点，感兴趣的读者可以尝试着自己实现，需要注意的是如果对模板进行360全方位进行旋转的话要考虑旋转后的模板会有“黑边”（这个就要考虑带掩膜的模板了）。同时和只考虑平移是类似的，只需要在金字塔最顶层进行全方位的比对（此时角度搜索的步长可以不用十分精细），然后对潜在匹配点在小角度范围搜索。</p>
+<p>#####2.4 End#####<br>NCC是基于图像灰度的一种匹配技术，在大部分情况下都可以适用。但是一定程度下还是会受光照不均匀影响，另外对于目标物体存在混乱，遮挡等情况匹配效果十分不理想。下面有机会的话会介绍基于边缘的模板匹配。</p>
+<p>PS：本文适合有一定图像处理基础的人阅读，由于公式编辑实在麻烦，省去部分推倒过程。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/机器视觉算法/">机器视觉算法</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/模板匹配/">模板匹配</a><a href="/tags/归一化相关系数/">归一化相关系数</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2015/08/09/基于NCC的模板匹配介绍及实现技术细节/" data-title="基于NCC的模板匹配介绍及实现技术细节 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/08/26/分水岭算法实现细节/" title="分水岭算法实现细节">
+  <strong>上一篇：</strong><br/>
+  <span>
+  分水岭算法实现细节</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2015/08/03/前序/"  title="写在前面">
+ <strong>下一篇：</strong><br/> 
+ <span>写在前面
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2015/08/09/基于NCC的模板匹配介绍及实现技术细节/" data-title="基于NCC的模板匹配介绍及实现技术细节" data-url="http://www.yanghespace.com/2015/08/09/基于NCC的模板匹配介绍及实现技术细节/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>

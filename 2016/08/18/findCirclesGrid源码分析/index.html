@@ -1,0 +1,660 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>findCirclesGrid源码分析 | YangHe&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="YangHe">
+    
+
+    
+    <meta name="description" content="对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。对于标">
+<meta property="og:type" content="article">
+<meta property="og:title" content="findCirclesGrid源码分析">
+<meta property="og:url" content="http://www.yanghespace.com/2016/08/18/findCirclesGrid源码分析/index.html">
+<meta property="og:site_name" content="YangHe's Blog">
+<meta property="og:description" content="对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。对于标">
+<meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f6ych0j6ebj21h00gon0y.jpg">
+<meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f6yck0ji2uj215e0goq53.jpg">
+<meta property="og:updated_time" content="2016-08-18T16:28:11.407Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="findCirclesGrid源码分析">
+<meta name="twitter:description" content="对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。对于标">
+<meta name="twitter:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f6ych0j6ebj21h00gon0y.jpg">
+
+    
+    <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="YangHe&#39;s Blog" title="YangHe&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="YangHe&#39;s Blog">YangHe&#39;s Blog</a></h1>
+				<h2 class="blog-motto">Never underestimate your power to change yourself.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:www.yanghespace.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/08/18/findCirclesGrid源码分析/" title="findCirclesGrid源码分析" itemprop="url">findCirclesGrid源码分析</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
+		
+  <p class="article-time">
+    <time datetime="2016-08-18T15:42:41.000Z" itemprop="datePublished"> 发表于 2016-08-18</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			
+		
+		</div>
+		
+		<p>对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。<br>OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。<br>在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。<br>对于标定板的类型，有棋盘格标定板，对称圆点标定板，非对称圆点标定板。本文要介绍的函数findCirclesGrid就是OpenCV中处理圆点标定板的函数。</p>
+<a id="more"></a>
+<p>#简介<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">//! finds circles' grid pattern of the specified size in the image</div><div class="line">CV_EXPORTS_W bool findCirclesGrid( InputArray image, Size patternSize,</div><div class="line">                                 OutputArray centers, int flags=CALIB_CB_SYMMETRIC_GRID,</div><div class="line">                                 const Ptr&lt;FeatureDetector&gt; &amp;blobDetector = new SimpleBlobDetector());</div></pre></td></tr></table></figure></p>
+<p>参数说明：<br>@image - 圆形网格标定板图片，必须是8-bit灰度或彩图。<br>@patternSize - 每行每列的圆点个数 ( patternSize = Size(points_per_row, points_per_colum) )。<br>@centers - 输出结果，已经排序好的圆点中心点（按照行排序，每行从左到右）<br>@flags -<br>  CALIB_CB_SYMMETRIC_GRID - 对称圆形网格<br>  CALIB_CB_ASYMMETRIC_GRID - 非对称圆形网格<br>  CALIB_CB_CLUSTERING - 使用特殊算法进行网格检测。对透视畸变最稳定，但是对背景混乱更敏感。</p>
+<p>函数使用：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function">Size <span class="title">patternsize</span><span class="params">(<span class="number">7</span>,<span class="number">7</span>)</span></span>; <span class="comment">//number of centers</span></div><div class="line">Mat gray = ....; <span class="comment">//source image</span></div><div class="line"><span class="built_in">vector</span>&lt;Point2f&gt; centers; <span class="comment">//this will be filled by the detected centers</span></div><div class="line"></div><div class="line"><span class="keyword">bool</span> patternfound = findCirclesGrid(gray, patternsize, centers);</div><div class="line"></div><div class="line">drawChessboardCorners(img, patternsize, Mat(centers), patternfound);</div></pre></td></tr></table></figure></p>
+<p>#实现思路及细节<br>以下源码分析使用OpenCV2.4.8版本。另外，CALIB_CB_CLUSTERING这个参数是被OpenCV禁用了，传入该参数会报错，本文不对该参数的实现细节进行介绍（该参数实现和另外两个完全不同）。</p>
+<p>findCirclesGrid函数涉及到的源码包含：calibinit.cpp，blobdetector.cpp，circlesgrid.cpp。主要涉及到两个类：SimpleBlobDetector、CirclesGridFinder。findCirclesGrid首先先调用SimpleBlobDetector类寻找潜在圆形中心点。然后调用CirclesGridFinder类寻找网格点。</p>
+<p>寻找圆形中心点的算法思路简单点说就是二值化+找轮廓+粒子分析的过程，由SimpleBlobDetector的成员函数detectImpl实现。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> SimpleBlobDetector::detectImpl(<span class="keyword">const</span> cv::Mat&amp; image, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;cv::KeyPoint&gt;&amp; keypoints, <span class="keyword">const</span> cv::Mat&amp;) <span class="keyword">const</span>;</div></pre></td></tr></table></figure></p>
+<p>在实现中，为了减少光照对二值化的影响，使用多个阈值进行二值化。对每个二值化的图片，找到所有粒子轮廓（粒子的中心点为其质心，这种计算中心点的方式可能对精度存在问题），通过粒子面积、圆度、特征矩、凹凸性、粒子颜色（黑/白）进行过滤。</p>
+<p>对每个二值化图得到的中心点，判断其是否是同一位置的中心点，是的话就放在同一个位置，否则加入新的位置。每个位置得到的中心点个数必须&gt;=2。然后再重新计算所有位置的点。</p>
+<p>【注】OpenCV源码存在bug，需要删掉：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">line <span class="number">304</span>: <span class="built_in">vector</span> &lt; <span class="built_in">vector</span>&lt;Center&gt; &gt; newCenters;</div><div class="line">line <span class="number">334</span>：newCenters.push_back(<span class="built_in">vector</span>&lt;Center&gt; (<span class="number">1</span>, curCenters[i]));</div><div class="line">line <span class="number">338</span>：<span class="built_in">std</span>::copy(newCenters.begin(), newCenters.end(), <span class="built_in">std</span>::back_inserter(centers));</div></pre></td></tr></table></figure></p>
+<p>以上代码与335行重复。</p>
+<p>找到中心点后需要确定网格点关系，这一步会比较复杂。在bool CirclesGridFinder::findHoles();函数中实现，网格点有两种模式，一种是对称，一种是非对称，这里只针对对称性网格分析代码实现。</p>
+<p>findHoles源码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">bool</span> CirclesGridFinder::findHoles()</div><div class="line">&#123;</div><div class="line">  <span class="keyword">switch</span> (parameters.gridType)</div><div class="line">  &#123;</div><div class="line">    <span class="keyword">case</span> CirclesGridFinderParameters::SYMMETRIC_GRID:</div><div class="line">    &#123;</div><div class="line">      <span class="built_in">vector</span>&lt;Point2f&gt; vectors, filteredVectors, basis;</div><div class="line">      <span class="function">Graph <span class="title">rng</span><span class="params">(<span class="number">0</span>)</span></span>;</div><div class="line">      computeRNG(rng, vectors);</div><div class="line">      filterOutliersByDensity(vectors, filteredVectors);</div><div class="line">      <span class="built_in">vector</span>&lt;Graph&gt; basisGraphs;</div><div class="line">      findBasis(filteredVectors, basis, basisGraphs);</div><div class="line">      findMCS(basis, basisGraphs);</div><div class="line">      <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">case</span> CirclesGridFinderParameters::ASYMMETRIC_GRID:</div><div class="line">    &#123;</div><div class="line">      <span class="built_in">vector</span>&lt;Point2f&gt; vectors, tmpVectors, filteredVectors, basis;</div><div class="line">      <span class="function">Graph <span class="title">rng</span><span class="params">(<span class="number">0</span>)</span></span>;</div><div class="line">      computeRNG(rng, tmpVectors);</div><div class="line">      rng2gridGraph(rng, vectors);</div><div class="line">      filterOutliersByDensity(vectors, filteredVectors);</div><div class="line">      <span class="built_in">vector</span>&lt;Graph&gt; basisGraphs;</div><div class="line">      findBasis(filteredVectors, basis, basisGraphs);</div><div class="line">      findMCS(basis, basisGraphs);</div><div class="line">      eraseUsedGraph(basisGraphs);</div><div class="line">      holes2 = holes;</div><div class="line">      holes.clear();</div><div class="line">      findMCS(basis, basisGraphs);</div><div class="line">      <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">default</span>:</div><div class="line">      CV_Error(CV_StsBadArg, <span class="string">"Unkown pattern type"</span>);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> (isDetectionCorrect());</div><div class="line">  <span class="comment">//CV_Error( 0, "Detection is not correct" );</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>先要介绍下Graph类，这个类的定义如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">class</span> Graph</div><div class="line">&#123;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">  <span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">set</span>&lt;<span class="keyword">size_t</span>&gt; Neighbors;</div><div class="line">  <span class="keyword">struct</span> Vertex</div><div class="line">  &#123;</div><div class="line">    Neighbors neighbors;</div><div class="line">  &#125;;</div><div class="line">  <span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="keyword">size_t</span>, Vertex&gt; Vertices;</div><div class="line"></div><div class="line">  <span class="comment">// 此处忽略成员函数</span></div><div class="line"><span class="keyword">private</span>:</div><div class="line">  Vertices vertices;</div><div class="line">&#125;;</div></pre></td></tr></table></figure></p>
+<p>Graph里面用来存储网格点，每个网格点Vertex包含它的所有邻居网格点下标。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> CirclesGridFinder::computeRNG(Graph &amp;rng, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;cv::Point2f&gt; &amp;vectors, Mat *drawImage) <span class="keyword">const</span>;</div></pre></td></tr></table></figure>
+<p>computeRNG用来计算点集之间的近邻关系，返回结果存储在Graph结构体中。该函数的复杂度位O(n^3)，n为点集个数。判断两个点A, B是邻居点的条件是不存在第三个点C，使得|AC| &lt; |AB| &amp;&amp; |BC| &lt; |AB|。<br>注意到还有一个输出参数：vectors。这个向量用来存储矢量AB。要注意的是A,B如果是近邻点，那么矢量AB, BA都会存储在vectors中。</p>
+<p>计算完点的近邻关系，将得到的vectors进行过滤，<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> CirclesGridFinder::filterOutliersByDensity(<span class="keyword">const</span> <span class="built_in">vector</span>&lt;Point2f&gt; &amp;samples, <span class="built_in">vector</span>&lt;Point2f&gt; &amp;filteredSamples);</div></pre></td></tr></table></figure></p>
+<p>过滤的条件很简单，对每个向量，统计和它相近的向量个数，如果个数大于一个阈值，保留这个向量。可以想象，对于网格点，必然存在大量的相近向量。但是另外要注意的是，畸变后的网格点，相近的向量会减少，因此，这个阈值设置不能太高。</p>
+<p>下图是测试过程中绘制的图片，左边是原图，右边图像表示点集的关系，所有边相连的点是近邻点。</p>
+<p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f6ych0j6ebj21h00gon0y.jpg"><br>    <br>    <small> computeRNG结果绘制 </small><br></p>
+
+<p>接着调用函数<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div></pre></td><td class="code"><pre><div class="line">void CirclesGridFinder::findBasis(const vector&lt;Point2f&gt; &amp;samples, vector&lt;Point2f&gt; &amp;basis, vector&lt;Graph&gt; &amp;basisGraphs)</div><div class="line">&#123;</div><div class="line">  basis.clear();</div><div class="line">  Mat bestLabels;</div><div class="line">  TermCriteria termCriteria;</div><div class="line">  Mat centers;</div><div class="line">  const int clustersCount = 4;</div><div class="line">  // 将方向矢量聚类成4个方向(有两对方向相反)</div><div class="line">  kmeans(Mat(samples).reshape(1, 0), clustersCount, bestLabels, termCriteria, parameters.kmeansAttempts,</div><div class="line">         KMEANS_RANDOM_CENTERS, centers);</div><div class="line">  assert( centers.type() == CV_32FC1 );</div><div class="line"></div><div class="line">  // 提取基准向量</div><div class="line">  vector&lt;int&gt; basisIndices;</div><div class="line">  //TODO: only remove duplicate</div><div class="line">  for (int i = 0; i &lt; clustersCount; i++)</div><div class="line">  &#123;</div><div class="line">    int maxIdx = (fabs(centers.at&lt;float&gt; (i, 0)) &lt; fabs(centers.at&lt;float&gt; (i, 1)));</div><div class="line">    if (centers.at&lt;float&gt; (i, maxIdx) &gt; 0)</div><div class="line">    &#123;</div><div class="line">      Point2f vec(centers.at&lt;float&gt; (i, 0), centers.at&lt;float&gt; (i, 1));</div><div class="line">      basis.push_back(vec);</div><div class="line">      basisIndices.push_back(i);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  if (basis.size() != 2)</div><div class="line">    CV_Error(0, "Basis size is not 2");</div><div class="line"></div><div class="line">  if (basis[1].x &gt; basis[0].x)</div><div class="line">  &#123;</div><div class="line">    std::swap(basis[0], basis[1]);</div><div class="line">    std::swap(basisIndices[0], basisIndices[1]);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  const float minBasisDif = 2;</div><div class="line">  if (norm(basis[0] - basis[1]) &lt; minBasisDif)</div><div class="line">    CV_Error(0, "degenerate basis" );</div><div class="line"></div><div class="line">  // 对所有方向向量，提取和基准向量同类的向量</div><div class="line">  vector&lt;vector&lt;Point2f&gt; &gt; clusters(2), hulls(2);</div><div class="line">  for (int k = 0; k &lt; (int)samples.size(); k++)</div><div class="line">  &#123;</div><div class="line">    int label = bestLabels.at&lt;int&gt; (k, 0);</div><div class="line">    int idx = -1;</div><div class="line">    if (label == basisIndices[0])</div><div class="line">      idx = 0;</div><div class="line">    if (label == basisIndices[1])</div><div class="line">      idx = 1;</div><div class="line">    if (idx &gt;= 0)</div><div class="line">    &#123;</div><div class="line">      clusters[idx].push_back(basis[idx] + parameters.convexHullFactor * (samples[k] - basis[idx]));</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  // 计算两个类的向量凸包</div><div class="line">  for (size_t i = 0; i &lt; basis.size(); i++)</div><div class="line">  &#123;</div><div class="line">    convexHull(Mat(clusters[i]), hulls[i]);</div><div class="line"></div><div class="line">    for (size_t j = 0; j &lt; hulls[i].size(); j++)</div><div class="line">    &#123;</div><div class="line">        parameters.minDistanceToAddKeypoint = MAX(parameters.minDistanceToAddKeypoint, cvCeil(norm(basis[i] - hulls[i][j])));</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // 对所有顶点，按照基准方向分别统计近邻关系。</div><div class="line">  basisGraphs.resize(basis.size(), Graph(keypoints.size()));</div><div class="line">  for (size_t i = 0; i &lt; keypoints.size(); i++)</div><div class="line">  &#123;</div><div class="line">    for (size_t j = 0; j &lt; keypoints.size(); j++)</div><div class="line">    &#123;</div><div class="line">      if (i == j)</div><div class="line">        continue;</div><div class="line"></div><div class="line">      Point2f vec = keypoints[i] - keypoints[j];</div><div class="line"></div><div class="line">      for (size_t k = 0; k &lt; hulls.size(); k++)</div><div class="line">      &#123;</div><div class="line">        if (pointPolygonTest(Mat(hulls[k]), vec, false) &gt;= 0)</div><div class="line">        &#123;</div><div class="line">          basisGraphs[k].addEdge(i, j);</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  if (basisGraphs.size() != 2)</div><div class="line">    CV_Error(0, "Number of basis graphs is not 2");</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>findBasis这个函数利用过滤完的网格向量，寻找网格的基准方向，同时构造基准方向上的点关系图。<br>首先用kmeans函数将向量聚类成4类（同一条边有两个方向）。提取其中的“正向”作为基准方向。这里要注意的是由于使用聚类中心作为基准方向，对透视畸变图误差较大。这个对下面要介绍的函数findMCS会有影响。<br>找到基准方向后，重新遍历所有顶点，构造两张图，每张图只考虑一个基准方向的近邻关系。</p>
+<p>下图左边是聚类后的基准方向，右边是根据基准方向构造的两张图：</p>
+<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f6yck0ji2uj215e0goq53.jpg"><br>    <br>    <small> findBasis结果绘制 </small><br></p>
+
+<p>以上都是准备工作，接下来终于要开始找网格的行了：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> CirclesGridFinder::findMCS(<span class="keyword">const</span> <span class="built_in">vector</span>&lt;Point2f&gt; &amp;basis, <span class="built_in">vector</span>&lt;Graph&gt; &amp;basisGraphs)</div><div class="line">&#123;</div><div class="line">  holes.clear();</div><div class="line">  Path longestPath;</div><div class="line">  <span class="keyword">size_t</span> bestGraphIdx = findLongestPath(basisGraphs, longestPath);</div><div class="line">  <span class="built_in">vector</span>&lt;<span class="keyword">size_t</span>&gt; holesRow = longestPath.vertices;</div><div class="line"></div><div class="line">  <span class="keyword">while</span> (holesRow.size() &gt; <span class="built_in">std</span>::max(patternSize.width, patternSize.height))</div><div class="line">  &#123;</div><div class="line">    holesRow.pop_back();</div><div class="line">    holesRow.erase(holesRow.begin());</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (bestGraphIdx == <span class="number">0</span>)</div><div class="line">  &#123;</div><div class="line">    holes.push_back(holesRow);</div><div class="line">    <span class="keyword">size_t</span> w = holes[<span class="number">0</span>].size();</div><div class="line">    <span class="keyword">size_t</span> h = holes.size();</div><div class="line"></div><div class="line">    <span class="comment">//parameters.minGraphConfidence = holes[0].size() * parameters.vertexGain + (holes[0].size() - 1) * parameters.edgeGain;</span></div><div class="line">    <span class="comment">//parameters.minGraphConfidence = holes[0].size() * parameters.vertexGain + (holes[0].size() / 2) * parameters.edgeGain;</span></div><div class="line">    <span class="comment">//parameters.minGraphConfidence = holes[0].size() * parameters.existingVertexGain + (holes[0].size() / 2) * parameters.edgeGain;</span></div><div class="line">    parameters.minGraphConfidence = holes[<span class="number">0</span>].size() * parameters.existingVertexGain;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = h; i &lt; patternSize.height; i++)</div><div class="line">    &#123;</div><div class="line">      addHolesByGraph(basisGraphs, <span class="literal">true</span>, basis[<span class="number">1</span>]);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">//parameters.minGraphConfidence = holes.size() * parameters.existingVertexGain + (holes.size() / 2) * parameters.edgeGain;</span></div><div class="line">    parameters.minGraphConfidence = holes.size() * parameters.existingVertexGain;</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = w; i &lt; patternSize.width; i++)</div><div class="line">    &#123;</div><div class="line">      addHolesByGraph(basisGraphs, <span class="literal">false</span>, basis[<span class="number">0</span>]);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span></div><div class="line">  &#123;</div><div class="line">    holes.resize(holesRow.size());</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; holesRow.size(); i++)</div><div class="line">      holes[i].push_back(holesRow[i]);</div><div class="line"></div><div class="line">    <span class="keyword">size_t</span> w = holes[<span class="number">0</span>].size();</div><div class="line">    <span class="keyword">size_t</span> h = holes.size();</div><div class="line"></div><div class="line">    parameters.minGraphConfidence = holes.size() * parameters.existingVertexGain;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = w; i &lt; patternSize.width; i++)</div><div class="line">    &#123;</div><div class="line">      addHolesByGraph(basisGraphs, <span class="literal">false</span>, basis[<span class="number">0</span>]);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    parameters.minGraphConfidence = holes[<span class="number">0</span>].size() * parameters.existingVertexGain;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = h; i &lt; patternSize.height; i++)</div><div class="line">    &#123;</div><div class="line">      addHolesByGraph(basisGraphs, <span class="literal">true</span>, basis[<span class="number">1</span>]);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>找网格行的过程稍微复杂点，先遍历两张图，调用如下函数找到最长的路径，并记录下它所在的基准图。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">size_t CirclesGridFinder::findLongestPath(vector&lt;Graph&gt; &amp;basisGraphs, Path &amp;bestPath);</div></pre></td></tr></table></figure></p>
+<p>该函数使用Floyd Warshall算法求图中顶点间的最短路径长度。<br>将最长路径longestPath经过的点作为行，该行称为种子行。然后调用addHolesByGraph开始找行，使用“列”基准方向开始找其他行，这里只贴出部分代码进行分析：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> CirclesGridFinder::findCandidateLine(<span class="built_in">vector</span>&lt;<span class="keyword">size_t</span>&gt; &amp;line, <span class="keyword">size_t</span> seedLineIdx, <span class="keyword">bool</span> addRow, Point2f basisVec,</div><div class="line">                                          <span class="built_in">vector</span>&lt;<span class="keyword">size_t</span>&gt; &amp;seeds)</div><div class="line">&#123;</div><div class="line">  line.clear();</div><div class="line">  seeds.clear();</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (addRow)</div><div class="line">  &#123;</div><div class="line">    <span class="comment">// 通过种子行，向列基准方向寻找下一行</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; holes[seedLineIdx].size(); i++)</div><div class="line">    &#123;</div><div class="line">      Point2f pt = keypoints[holes[seedLineIdx][i]] + basisVec;</div><div class="line">      addPoint(pt, line);</div><div class="line">      seeds.push_back(holes[seedLineIdx][i]);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span></div><div class="line">  &#123;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; holes.size(); i++)</div><div class="line">    &#123;</div><div class="line">      Point2f pt = keypoints[holes[i][seedLineIdx]] + basisVec;</div><div class="line">      addPoint(pt, line);</div><div class="line">      seeds.push_back(holes[i][seedLineIdx]);</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  assert( line.size() == seeds.size() );</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>对行上每个点，加上“列”基准向量，得到新行的点，判断这个点是否在顶点集中（是否存在有足够接近的点），如果不在顶点集中，则把得到的新点添加到顶点集中，再把这个点加入到新行中。这里就会出现，由于基准向量存在误差，导致得到的点不在原始点集中。最后计算新行的Confidence时，如果新行中有点不在原始顶点集中，Confidence值就不达不到阈值。</p>
+<p>找到所有的行后，需要判断是否行列满足要求。事实上，由于透视畸变的存在，不满足要求的情况还挺多。因此，OpenCV在findHoles中又做了一步操作。如果不满足要求，利用找到的点的坐标，计算图像的透视变换。将原始点集进行透视畸变校正，校正后的点集再按照上述步骤重新进行一次计算。</p>
+<p>事实上，OpenCV的这个函数涉及很多阈值的参数，这些参数都是固定的，因此，对于很多测试图片无法正常的找到圆点中心。但是只要知道了实现原理，改起来就很容易很多了。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/OpenCV源码分析/">OpenCV源码分析</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/opencv/">opencv</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://www.yanghespace.com/2016/08/18/findCirclesGrid源码分析/" data-title="findCirclesGrid源码分析 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/09/26/OpenCV相机标定原理及源码分析/" title="OpenCV相机标定原理及源码分析">
+  <strong>上一篇：</strong><br/>
+  <span>
+  OpenCV相机标定原理及源码分析</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/05/29/Zbar库EAN解码原理及代码分析/"  title="Zbar库EAN解码原理及代码分析">
+ <strong>下一篇：</strong><br/> 
+ <span>Zbar库EAN解码原理及代码分析
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/08/18/findCirclesGrid源码分析/" data-title="findCirclesGrid源码分析" data-url="http://www.yanghespace.com/2016/08/18/findCirclesGrid源码分析/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ 
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/OpenCV源码分析/" title="OpenCV源码分析">OpenCV源码分析<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/专利/" title="专利">专利<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/个人/" title="个人">个人<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/开发环境搭建/" title="开发环境搭建">开发环境搭建<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/机器视觉算法/" title="机器视觉算法">机器视觉算法<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/翻译/" title="翻译">翻译<sup>1</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/opencv/" title="opencv">opencv<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/canny/" title="canny">canny<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/barcode/" title="barcode">barcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/visual-studio/" title="visual studio">visual studio<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m YangHe in DMV. <br/>
+			This is my blog, I just want to do something change myself.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/https://github.com/younghe## e.g. wuchong for https://github.com/wuchong" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:yanghework@gmail.com## e.g. imjark@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="YangHe">YangHe</a>
+		
+		
+		</p>
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+	</span>
+	<span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+	</span>
+	<span id="busuanzi_container_page_pv">
+  	本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+	</span>
+
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"yanghe"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F03e7379971b0e870bbfc888a3da1d31e## e.g. e6d1f421bbc9962127a50488f9ed37d1 your baidu tongji site code' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        TeX: {equationNumbers: {
+            autoNumber: ["AMS"], useLabelIds: true}},
+            "HTML-CSS": {linebreaks: {automatic: true}},
+            SVG: {linebreaks: {automatic: true}}
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({"HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"], linebreaks: { automatic:true }, EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
+        tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno",skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']},
+        TeX: {  noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } }, Macros: { href: "{}" } },
+        messageStyle: "none"
+    }); 
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?03e7379971b0e870bbfc888a3da1d31e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+  </body>
+</html>
