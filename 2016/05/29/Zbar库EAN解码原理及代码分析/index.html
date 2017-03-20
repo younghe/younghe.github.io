@@ -19,7 +19,7 @@
 <meta property="og:description" content="Zbar是开源的条码解码库，类似的开源库有ZXing。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。">
 <meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgcxcbncg2073046t8k.gif">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgfd2lfog20ba04s0sm.gif">
-<meta property="og:updated_time" content="2016-06-06T13:57:26.076Z">
+<meta property="og:updated_time" content="2017-03-19T11:06:51.657Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Zbar库EAN解码原理及代码分析">
 <meta name="twitter:description" content="Zbar是开源的条码解码库，类似的开源库有ZXing。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。">
@@ -110,20 +110,20 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#EAN-13码"><span class="toc-number">1.</span> <span class="toc-text">EAN-13码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#简介"><span class="toc-number">1.1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编码表"><span class="toc-number">1.2.</span> <span class="toc-text">编码表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#例子"><span class="toc-number">1.3.</span> <span class="toc-text">例子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Zbar-EAN解码算法"><span class="toc-number">2.</span> <span class="toc-text">Zbar EAN解码算法</span></a></li></ol>
 		
 		</div>
 		
 		<p><a href="http://zbar.sourceforge.net/" target="_blank" rel="external">Zbar</a>是开源的条码解码库，类似的开源库有<a href="https://github.com/zxing/zxing" target="_blank" rel="external">ZXing</a>。zbar支持EAN/UPC码, Code128码, Code39, Code93, 交叉25码, QR码, PDF417码的解码。本文简单介绍EAN/UPC的编码原理，详述zbar中相应的解码算法，并简要分析它的代码实现。</p>
 <a id="more"></a>
-<p>##EAN-13码<br>关于条码的相关知识除了wikipedia上面的介绍外，推荐几个不错的链接：<br>1.<a href="http://www.appsbarcode.com/barcode-encode.php" target="_blank" rel="external">條碼編碼規則</a><br>2.<a href="http://www.barcodeisland.com/symbolgy.phtml" target="_blank" rel="external">barcode island</a></p>
+<h2 id="EAN-13码"><a href="#EAN-13码" class="headerlink" title="EAN-13码"></a>EAN-13码</h2><p>关于条码的相关知识除了wikipedia上面的介绍外，推荐几个不错的链接：<br>1.<a href="http://www.appsbarcode.com/barcode-encode.php" target="_blank" rel="external">條碼編碼規則</a><br>2.<a href="http://www.barcodeisland.com/symbolgy.phtml" target="_blank" rel="external">barcode island</a></p>
 <p>这些链接资料包含了条码的发展历程、解码规则以及应用领域。下面对EAN-13进行一个简单的介绍，这些介绍仅仅能够让读者对接下来的解码算法能够正常理解。</p>
-<p>###简介<br>EAN全称European Article Number，只能对数字进行编码，根据长度分为EAN-13, EAN-8两种编码方式（这两种码并不能相互转换），EAN-13码由13个数字组成。它的基本结构如下：</p>
+<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>EAN全称European Article Number，只能对数字进行编码，根据长度分为EAN-13, EAN-8两种编码方式（这两种码并不能相互转换），EAN-13码由13个数字组成。它的基本结构如下：</p>
 <p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgcxcbncg2073046t8k.gif" width="25%"><br>    <br>    <small> ean-13基本结构 </small><br></p>
 
 <p>Number System由2~3个数字组成，表示国家地区（注意第一位Number System并没有编码成条码，也就是说图片中第一个数字7没有对应的bar和space），Manufacture Code为厂商码，Product Code为产品码，最后一位是校验码。每个字元由2个bar, 2个space组成。1个字元由7个module宽度构成，每个module我们用0/1表示。其中1表示bar的module，0表示space的module。</p>
 <p>一个EAN-13码的基本结构为：<br>-左护线(left-hand guard bars)，编码为101<br>-左资料码<br>-中线(center guard pattern), 编码为01010<br>-右资料码<br>-右护线(right-hand guard bars)</p>
-<p>###编码表<br>下面给出最关键的编码规则（下面描述中称为表-1）：</p>
+<h3 id="编码表"><a href="#编码表" class="headerlink" title="编码表"></a>编码表</h3><p>下面给出最关键的编码规则（下面描述中称为表-1）：</p>
 <table>
 <thead>
 <tr>
@@ -298,14 +298,14 @@
 </tr>
 </tbody>
 </table>
-<p>###例子<br>这里对上图中的”7-501031-311309”进行编码。</p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>这里对上图中的”7-501031-311309”进行编码。</p>
 <p>根据第二张表，第一位Number System为7，对应的左手编码方式为”Odd/Even/Odd/Even/Odd/Even”。每一位数字的编码为：</p>
 <p>1.左护线 (总是相同的): 101.<br>2.第二位Number System[5]: 按照Type A进行编码, 0110001.<br>3.厂商码第1个位 [0]: 按照Type B进行编码, 0100111.<br>4.厂商码第2个位 [1]: 按照Type A进行编码, 0011001.<br>5.厂商码第3个位 [0]: 按照Type B进行编码, 0100111.<br>6.厂商码第4个位 [3]: 按照Type A进行编码, 0111101.<br>7.厂商码第5个位 [1]: 按照Type B进行编码, 0110011.<br>8.中线 (总是相同的): 01010.<br>9.产品码第1个位 [3]: 按照Type C进行编码, 1000010.<br>10.产品码第2个位 [1]: 按照Type C进行编码, 1100110.<br>11.产品码第3个位 [1]: 按照Type C进行编码, 1100110.<br>12.产品码第4个位 [3]: 按照Type C进行编码, 1000010.<br>13.产品码第5个位 [0]: 按照Type C进行编码, 1110010.<br>14.校验位 [9]: 按照Type C进行编码, 1110100.<br>15.右护线 (总是相同的): 101.</p>
 <p>你可以和下图进行比对：</p>
 <p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgfd2lfog20ba04s0sm.gif" width="30%"><br>    <br>    <small> ean-13编码 </small><br></p>
 
 
-<p>##Zbar EAN解码算法<br>事实上解码的过程主要依赖表-1，表-2只是起验证作用。表-1中每个编码方式都是不一样的，我们只要对扫描到的条码宽度按照上面的比例计算最接近的编码格式就好。</p>
+<h2 id="Zbar-EAN解码算法"><a href="#Zbar-EAN解码算法" class="headerlink" title="Zbar EAN解码算法"></a>Zbar EAN解码算法</h2><p>事实上解码的过程主要依赖表-1，表-2只是起验证作用。表-1中每个编码方式都是不一样的，我们只要对扫描到的条码宽度按照上面的比例计算最接近的编码格式就好。</p>
 <p>在Zbar中，具体是这么操作的：<br>1.首先我们先把表-1转换成宽度的格式进行编码；<br>2.然后对于左编码区，将最后3个宽度两两相加，对于右编码区，将前三个宽度两两相加（我们统一将中间两个宽度相加的结果放在最后）。以数字0为例，左编码区（奇校验）的宽度为3211, 后两个宽度相加为2，中间宽度相加为3，得到相加后的编码为23。</p>
 <table>
 <thead>
@@ -443,7 +443,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#EAN-13码"><span class="toc-number">1.</span> <span class="toc-text">EAN-13码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#简介"><span class="toc-number">1.1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编码表"><span class="toc-number">1.2.</span> <span class="toc-text">编码表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#例子"><span class="toc-number">1.3.</span> <span class="toc-text">例子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Zbar-EAN解码算法"><span class="toc-number">2.</span> <span class="toc-text">Zbar EAN解码算法</span></a></li></ol>
  
   </div>
 
@@ -494,15 +494,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -518,27 +526,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

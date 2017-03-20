@@ -19,7 +19,7 @@
 <meta property="og:description" content="对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。对于标">
 <meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f6ych0j6ebj21h00gon0y.jpg">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f6yck0ji2uj215e0goq53.jpg">
-<meta property="og:updated_time" content="2016-08-18T16:28:11.407Z">
+<meta property="og:updated_time" content="2017-03-19T11:04:00.451Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="findCirclesGrid源码分析">
 <meta name="twitter:description" content="对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。对于标">
@@ -110,16 +110,16 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#实现思路及细节"><span class="toc-number">2.</span> <span class="toc-text">实现思路及细节</span></a></li></ol>
 		
 		</div>
 		
 		<p>对于使用标定板进行相机标定的流程当中，有一个非常重要的步骤是找到标定板上点的位置，以及点在世界坐标系中的对应关系。<br>OpenCV相机标定参考的是Zhengyou Zhang的论文“Flexible Camera Calibration By Viewing a Plane From Unknown Orientations”。<br>在计算标定参数前，需要计算平面标定板的点位置，以及点对应的世界坐标。<br>对于标定板的类型，有棋盘格标定板，对称圆点标定板，非对称圆点标定板。本文要介绍的函数findCirclesGrid就是OpenCV中处理圆点标定板的函数。</p>
 <a id="more"></a>
-<p>#简介<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">//! finds circles' grid pattern of the specified size in the image</div><div class="line">CV_EXPORTS_W bool findCirclesGrid( InputArray image, Size patternSize,</div><div class="line">                                 OutputArray centers, int flags=CALIB_CB_SYMMETRIC_GRID,</div><div class="line">                                 const Ptr&lt;FeatureDetector&gt; &amp;blobDetector = new SimpleBlobDetector());</div></pre></td></tr></table></figure></p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">//! finds circles' grid pattern of the specified size in the image</div><div class="line">CV_EXPORTS_W bool findCirclesGrid( InputArray image, Size patternSize,</div><div class="line">                                 OutputArray centers, int flags=CALIB_CB_SYMMETRIC_GRID,</div><div class="line">                                 const Ptr&lt;FeatureDetector&gt; &amp;blobDetector = new SimpleBlobDetector());</div></pre></td></tr></table></figure>
 <p>参数说明：<br>@image - 圆形网格标定板图片，必须是8-bit灰度或彩图。<br>@patternSize - 每行每列的圆点个数 ( patternSize = Size(points_per_row, points_per_colum) )。<br>@centers - 输出结果，已经排序好的圆点中心点（按照行排序，每行从左到右）<br>@flags -<br>  CALIB_CB_SYMMETRIC_GRID - 对称圆形网格<br>  CALIB_CB_ASYMMETRIC_GRID - 非对称圆形网格<br>  CALIB_CB_CLUSTERING - 使用特殊算法进行网格检测。对透视畸变最稳定，但是对背景混乱更敏感。</p>
 <p>函数使用：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function">Size <span class="title">patternsize</span><span class="params">(<span class="number">7</span>,<span class="number">7</span>)</span></span>; <span class="comment">//number of centers</span></div><div class="line">Mat gray = ....; <span class="comment">//source image</span></div><div class="line"><span class="built_in">vector</span>&lt;Point2f&gt; centers; <span class="comment">//this will be filled by the detected centers</span></div><div class="line"></div><div class="line"><span class="keyword">bool</span> patternfound = findCirclesGrid(gray, patternsize, centers);</div><div class="line"></div><div class="line">drawChessboardCorners(img, patternsize, Mat(centers), patternfound);</div></pre></td></tr></table></figure></p>
-<p>#实现思路及细节<br>以下源码分析使用OpenCV2.4.8版本。另外，CALIB_CB_CLUSTERING这个参数是被OpenCV禁用了，传入该参数会报错，本文不对该参数的实现细节进行介绍（该参数实现和另外两个完全不同）。</p>
+<h1 id="实现思路及细节"><a href="#实现思路及细节" class="headerlink" title="实现思路及细节"></a>实现思路及细节</h1><p>以下源码分析使用OpenCV2.4.8版本。另外，CALIB_CB_CLUSTERING这个参数是被OpenCV禁用了，传入该参数会报错，本文不对该参数的实现细节进行介绍（该参数实现和另外两个完全不同）。</p>
 <p>findCirclesGrid函数涉及到的源码包含：calibinit.cpp，blobdetector.cpp，circlesgrid.cpp。主要涉及到两个类：SimpleBlobDetector、CirclesGridFinder。findCirclesGrid首先先调用SimpleBlobDetector类寻找潜在圆形中心点。然后调用CirclesGridFinder类寻找网格点。</p>
 <p>寻找圆形中心点的算法思路简单点说就是二值化+找轮廓+粒子分析的过程，由SimpleBlobDetector的成员函数detectImpl实现。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> SimpleBlobDetector::detectImpl(<span class="keyword">const</span> cv::Mat&amp; image, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;cv::KeyPoint&gt;&amp; keypoints, <span class="keyword">const</span> cv::Mat&amp;) <span class="keyword">const</span>;</div></pre></td></tr></table></figure></p>
 <p>在实现中，为了减少光照对二值化的影响，使用多个阈值进行二值化。对每个二值化的图片，找到所有粒子轮廓（粒子的中心点为其质心，这种计算中心点的方式可能对精度存在问题），通过粒子面积、圆度、特征矩、凹凸性、粒子颜色（黑/白）进行过滤。</p>
@@ -214,7 +214,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#实现思路及细节"><span class="toc-number">2.</span> <span class="toc-text">实现思路及细节</span></a></li></ol>
  
   </div>
 
@@ -265,15 +265,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -289,27 +297,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

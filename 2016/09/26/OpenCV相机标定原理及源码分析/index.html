@@ -22,7 +22,7 @@
 <meta property="og:image" content="http://ww3.sinaimg.cn/large/8f4158c5gw1f887rlfr84j205902bdfq.jpg">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f8882yl9g1j20mg07mq3r.jpg">
 <meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f889lbnsntj20bs02e74g.jpg">
-<meta property="og:updated_time" content="2016-09-27T09:54:20.359Z">
+<meta property="og:updated_time" content="2017-03-19T11:02:49.142Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OpenCV相机标定原理及源码分析">
 <meta name="twitter:description" content="摄像机标定是3D计算机视觉从2D图像中获取世界坐标必不可少的一个步骤。每个镜头的畸变程度各不相同，通过相机标定可以校正这种镜头畸变。另外标定后就可以得到世界坐标系中目标物体的米制单位的坐标，例如多少米或多少毫米。">
@@ -113,31 +113,28 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摄像机模型"><span class="toc-number">1.</span> <span class="toc-text">摄像机模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#针孔相机模型"><span class="toc-number">1.1.</span> <span class="toc-text">针孔相机模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#畸变模型"><span class="toc-number">1.2.</span> <span class="toc-text">畸变模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Division模型"><span class="toc-number">1.2.1.</span> <span class="toc-text">Division模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多项式模型"><span class="toc-number">1.2.2.</span> <span class="toc-text">多项式模型</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#径向畸变"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">径向畸变</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#切向畸变"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">切向畸变</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标定过程"><span class="toc-number">2.</span> <span class="toc-text">标定过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考文献"><span class="toc-number">3.</span> <span class="toc-text">参考文献</span></a></li></ol>
 		
 		</div>
 		
 		<p>摄像机标定是3D计算机视觉从2D图像中获取世界坐标必不可少的一个步骤。每个镜头的畸变程度各不相同，通过相机标定可以校正这种镜头畸变。另外标定后就可以得到世界坐标系中目标物体的米制单位的坐标，例如多少米或多少毫米。</p>
 <a id="more"></a>
-<p>##摄像机模型</p>
-<p>为了标定摄像机，我们有必要建立一个模型，该模型由摄像机、镜头和图像采集卡组成，这个模型可以将世界坐标系中三维空间点投影到二维图像中。再机器视觉应用中常用的有两种不同类型镜头：普通镜头和远心镜头。使用普通镜头时，世界坐标系到图像坐标系的投影为透视变换，这种模型称为<strong>针孔摄像机模型</strong>。远心镜头实现世界坐标系到图像坐标系的平行投影，称为<strong>远心摄像机模型</strong>。</p>
+<h2 id="摄像机模型"><a href="#摄像机模型" class="headerlink" title="摄像机模型"></a>摄像机模型</h2><p>为了标定摄像机，我们有必要建立一个模型，该模型由摄像机、镜头和图像采集卡组成，这个模型可以将世界坐标系中三维空间点投影到二维图像中。再机器视觉应用中常用的有两种不同类型镜头：普通镜头和远心镜头。使用普通镜头时，世界坐标系到图像坐标系的投影为透视变换，这种模型称为<strong>针孔摄像机模型</strong>。远心镜头实现世界坐标系到图像坐标系的平行投影，称为<strong>远心摄像机模型</strong>。</p>
 <p>我们上面讲的通常是面阵图像传感器，对于线阵图像传感器，一般搭配普通摄像机，这种模型称为<strong>线扫摄像机模型</strong>。</p>
-<p>###针孔相机模型</p>
-<p></p><p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f87yn719lsj20wk09gjsf.jpg"><br>    <br>    <small> <strong>针孔摄像机几何</strong>. C是摄像机中心而p是主点。这里的摄像机中心位于坐标原点.注意图像平面位于摄像机中心之前. </small><br></p><br>我们考虑空间点到一张平面上的中心投影。令摄影中心位于坐标原点，平面 $Z = -f$ 为聚焦平面(f 为相机焦距)，空间坐标 $P_w = (X_w, Y_w, Z_w)$。为了让所有的坐标都为正，我们让聚焦平面对称到 $Z = f$。根据相似三角形，很快算出点$(X_w, Y_w, Z_w)$被映射为$(fX_w/Z_w, fY_w/Z_w, f)$。由于图像平面的坐标原点一般不在主点上，因此实际映射为$(fX_w/Z_w + c_x, fY_w/Z_w + c_y, f)$。注意这里映射后点的坐标实际上还是米制单位，我们需要把它转化为像素单位：$(fs_x \frac{X_w}{Z_w} + c_x, fs_y \frac{Y_w}{Z_w} + c_y, f)$。这里$s_x$, $s_y$单位为像素/毫米，表示x, y方向每毫米有多少个像素。使用矩阵形式表示为：用矩阵的形式表示为：<p></p>
+<h3 id="针孔相机模型"><a href="#针孔相机模型" class="headerlink" title="针孔相机模型"></a>针孔相机模型</h3><p></p><p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f87yn719lsj20wk09gjsf.jpg"><br>    <br>    <small> <strong>针孔摄像机几何</strong>. C是摄像机中心而p是主点。这里的摄像机中心位于坐标原点.注意图像平面位于摄像机中心之前. </small><br></p><br>我们考虑空间点到一张平面上的中心投影。令摄影中心位于坐标原点，平面 $Z = -f$ 为聚焦平面(f 为相机焦距)，空间坐标 $P_w = (X_w, Y_w, Z_w)$。为了让所有的坐标都为正，我们让聚焦平面对称到 $Z = f$。根据相似三角形，很快算出点$(X_w, Y_w, Z_w)$被映射为$(fX_w/Z_w, fY_w/Z_w, f)$。由于图像平面的坐标原点一般不在主点上，因此实际映射为$(fX_w/Z_w + c_x, fY_w/Z_w + c_y, f)$。注意这里映射后点的坐标实际上还是米制单位，我们需要把它转化为像素单位：$(fs_x \frac{X_w}{Z_w} + c_x, fs_y \frac{Y_w}{Z_w} + c_y, f)$。这里$s_x$, $s_y$单位为像素/毫米，表示x, y方向每毫米有多少个像素。使用矩阵形式表示为：用矩阵的形式表示为：<p></p>
 <p>$$<br>w\begin{pmatrix} x \\  y \\  1 \\  \end{pmatrix} =<br>\begin{pmatrix} f_x &amp; &amp; c_x \\ &amp; f_y &amp; c_y \\ &amp; &amp; 1 \\ \end{pmatrix}<br>\begin{pmatrix} X_w \\  Y_w \\  Z_w \\  \end{pmatrix}<br>\tag{1}<br>$$</p>
 <p>这里$f_x = fs_x, f_y = fs_y$。</p>
 <p>一般，空间点采用不同的欧式坐标系表示，称为世界坐标系，两个坐标系通过旋转和平移相联系。对任意世界坐标系下的空间点$\tilde{P_w}$，将其变换到摄像机坐标系中$\tilde{P_c}$：$P_c = R P_w + T$。其中，$T = (t_x, t_y, t_z)$是一个平移向量，$R = R(\alpha, \beta, \gamma)$是一个旋转矩阵，这个矩阵由三个旋转角度确定，分别是绕摄像机坐标系z轴旋转角度$\gamma$, 绕y轴旋转角度$\beta$, 绕x轴旋转角度$\alpha$:</p>
 <p>$$<br>  R(\alpha, \beta, \gamma) =<br>  \begin{pmatrix} 1 &amp; 0 &amp; 0 \\ 0 &amp; cos\alpha &amp; -sin\alpha \\ 0 &amp; sin\alpha &amp; cos\alpha \\ \end{pmatrix}<br>  \begin{pmatrix} cos\beta &amp; 0 &amp; sin\beta \\ 0 &amp; 1 &amp; 0 \\ -sin\beta &amp; 0 &amp; cos\beta \\ \end{pmatrix}<br>  \begin{pmatrix} cos\gamma &amp; -sin\gamma &amp; 0 \\ sin\gamma &amp; cos\gamma &amp; 0 \\ 0 &amp; 0 &amp; 1 \\ \end{pmatrix}<br>  \tag{2}<br>$$</p>
 <p>将上述两个公式结合起来就是：<br>$$<br>  w\begin{pmatrix} x \\  y \\  1 \\  \end{pmatrix} =<br>  A\left[<br>    \begin{array}{c|c}<br>      R &amp; T<br>    \end{array}<br>    \right]<br>  \begin{pmatrix} X_w \\  Y_w \\  Z_w \\ 1 \\ \end{pmatrix}<br>  \tag{3}<br>$$</p>
 <p>我们称$f, s_x, s_y, c_x, c_y$为摄像机的内参，$\alpha, \beta, \gamma, t_x, t_y, t_z$为摄像机外参。</p>
-<p>###畸变模型<br>实际的摄像机模型无法达到理想的针孔模型，整个模型会引入畸变。关于畸变模型的建立已超出本文讨论范围，有兴趣可参看文献[5],[6]。以下简单介绍几种畸变模型的数学表达。</p>
-<p>####Division模型<br>$$<br>  \begin{pmatrix} \tilde{u} \\  \tilde{v} \\ \end{pmatrix} =<br>  \frac{2}{1+\sqrt{1-4k(u^2+v^2)}}<br>  \begin{pmatrix} u \\  v \\ \end{pmatrix}<br>  \tag{4}<br>$$<br>其中，$u, v$为空间点投影到图像平面后的坐标，$\tilde{u}, \tilde{v}$为畸变坐标。参数$k$表示了径向畸变量级，如果$k$是负值，畸变为桶形畸变。如果$k$是正值，畸变为枕形畸变。</p>
+<h3 id="畸变模型"><a href="#畸变模型" class="headerlink" title="畸变模型"></a>畸变模型</h3><p>实际的摄像机模型无法达到理想的针孔模型，整个模型会引入畸变。关于畸变模型的建立已超出本文讨论范围，有兴趣可参看文献[5],[6]。以下简单介绍几种畸变模型的数学表达。</p>
+<h4 id="Division模型"><a href="#Division模型" class="headerlink" title="Division模型"></a>Division模型</h4><p>$$<br>  \begin{pmatrix} \tilde{u} \\  \tilde{v} \\ \end{pmatrix} =<br>  \frac{2}{1+\sqrt{1-4k(u^2+v^2)}}<br>  \begin{pmatrix} u \\  v \\ \end{pmatrix}<br>  \tag{4}<br>$$<br>其中，$u, v$为空间点投影到图像平面后的坐标，$\tilde{u}, \tilde{v}$为畸变坐标。参数$k$表示了径向畸变量级，如果$k$是负值，畸变为桶形畸变。如果$k$是正值，畸变为枕形畸变。</p>
 <p>上述模型几乎可以表示所有机器视觉应用中常用镜头的畸变，并且足够准确。另外，和其他模型相比，上述模型有一个极大的优点就是可以通过下式进行畸变校正：<br>$$<br>  \begin{pmatrix} u \\  v \\ \end{pmatrix} =<br>  \frac{1}{1+k(\tilde{u}^2+\tilde{v}^2)}<br>  \begin{pmatrix} \tilde{u} \\  \tilde{v} \\ \end{pmatrix}<br>  \tag{5}<br>$$<br>这在使用图像坐标计算世界坐标的过程中非常重要。</p>
-<p>####多项式模型</p>
-<p>#####径向畸变<br>$$<br>  \tilde{u} = u\frac{1+k_1r^2+k_2r^4+k_3r^6}{1+k_4r^2+k_5r^4+k_6r^6} \\<br>  \tilde{v} = v\frac{1+k_1r^2+k_2r^4+k_3r^6}{1+k_4r^2+k_5r^4+k_6r^6} \\<br>  r^2 = u^2 + v^2<br>  \tag{6}<br>$$<br>$k_1, k_2, k_3, k_4, k_5, k_6$是径向畸变系数。</p>
-<p>#####切向畸变<br>$$<br>  \tilde{u} = u + [2p_1uv + p_2(r^2+2u^2)] \\<br>  \tilde{v} = v + [2p_2xy + p_1(r^2+2v^2)] \\<br>  r^2 = u^2 + v^2<br>  \tag{7}<br>$$<br>$p_1, p_2$是切向畸变系数。</p>
+<h4 id="多项式模型"><a href="#多项式模型" class="headerlink" title="多项式模型"></a>多项式模型</h4><h5 id="径向畸变"><a href="#径向畸变" class="headerlink" title="径向畸变"></a>径向畸变</h5><p>$$<br>  \tilde{u} = u\frac{1+k_1r^2+k_2r^4+k_3r^6}{1+k_4r^2+k_5r^4+k_6r^6} \\<br>  \tilde{v} = v\frac{1+k_1r^2+k_2r^4+k_3r^6}{1+k_4r^2+k_5r^4+k_6r^6} \\<br>  r^2 = u^2 + v^2<br>  \tag{6}<br>$$<br>$k_1, k_2, k_3, k_4, k_5, k_6$是径向畸变系数。</p>
+<h5 id="切向畸变"><a href="#切向畸变" class="headerlink" title="切向畸变"></a>切向畸变</h5><p>$$<br>  \tilde{u} = u + [2p_1uv + p_2(r^2+2u^2)] \\<br>  \tilde{v} = v + [2p_2xy + p_1(r^2+2v^2)] \\<br>  r^2 = u^2 + v^2<br>  \tag{7}<br>$$<br>$p_1, p_2$是切向畸变系数。</p>
 <p>相机的畸变系数也是内参的一部分。</p>
-<p>##标定过程<br>以上只是建立了普通镜头面阵相机的数学模型，我们接下来要做的就是确定摄像机内参以及外参。为了进行摄像机标定，必须已知世界系中足够多三维空间点的坐标，找到这些空间点在图像中的投影点的二维图像坐标，并建立对应关系。关于确定对应关系可以参考另一篇博客<a href="http://yanghespace.com/2016/08/18/findCirclesGrid%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_blank" rel="external">findCirclesGrid源码分析</a>。</p>
+<h2 id="标定过程"><a href="#标定过程" class="headerlink" title="标定过程"></a>标定过程</h2><p>以上只是建立了普通镜头面阵相机的数学模型，我们接下来要做的就是确定摄像机内参以及外参。为了进行摄像机标定，必须已知世界系中足够多三维空间点的坐标，找到这些空间点在图像中的投影点的二维图像坐标，并建立对应关系。关于确定对应关系可以参考另一篇博客<a href="http://yanghespace.com/2016/08/18/findCirclesGrid%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_blank" rel="external">findCirclesGrid源码分析</a>。</p>
 <p>相机标定的方法已经有大量的研究，一般可以分为两类：基于特定的实验条件，如形状、尺寸已知的标定物，利用一系列数学变换和计算方法，求取内参外参。另一种称为自标定，不依赖于标定参照物，仅利用摄像机在运动过程中周围环境的图像与图像之间的对应关系对摄像机进行标定。下面大致介绍下Zhengyou Zhang的标定方法[4]。</p>
 <p>Zhang的方法只需要相机在不同角度对一个平面标定板采集至少2张图像。这种方法相对于其他方法非常灵活，道具制作简单，常见的标定板可以是棋盘格，也可以是圆形网格。</p>
 <p>由上面的针孔模型，有：<br>$$<br>  w\begin{pmatrix} x \\  y \\  1 \\  \end{pmatrix} =<br>  A\begin{bmatrix} r_1 &amp; r_2 &amp; r_3 &amp; t \\ \end{bmatrix}<br>  \begin{pmatrix} X_w \\  Y_w \\  Z_w \\ 1 \\ \end{pmatrix}<br>  \tag{8}<br>$$</p>
@@ -155,7 +152,7 @@
 <center><img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f889lbnsntj20bs02e74g.jpg" alt=""></center>
 
 <p>其中，$\hat{m}(A, k_1, k_2, R_i, t_i, M_j)$将空间点$M_j$按照(3)变换到图像坐标系，同时要考虑畸变带来的影响。这是一个非线性最小化问题，可以通过Levenberg-Marqurdt算法解决[7]。</p>
-<p>##参考文献<br>[1]Hartley R, Zisserman A. Multiple view geometry in computer vision[M]. Cambridge university press, 2003.<br>中文版：计算机视觉中的多视图几何<br>[2]Steger C, Ulrich M, Wiedemann C. Machine vision algorithms and applications[J]. Illumination, 2008, 5(2.1): 1.<br>中文版：机器视觉算法与应用<br>[3]Bradski G, Kaehler A. Learning OpenCV: Computer vision with the OpenCV library[M]. “ O’Reilly Media, Inc.”, 2008.<br>中文版：学习OpenCV<br>[4]Zhang Z. A flexible new technique for camera calibration[J]. IEEE Transactions on pattern analysis and machine intelligence, 2000, 22(11): 1330-1334.<br>[5]Lenz R, Fritsch D. Accuracy of videometry with CCD sensors[J]. ISPRS Journal of Photogrammetry and Remote Sensing, 1990, 45(2): 90-110.<br>[6]Duane C B. Close-range camera calibration[J]. Photogramm. Eng, 1971, 37(8): 855-866.<br>[7]Moré J J. The Levenberg-Marquardt algorithm: implementation and theory[M]//Numerical analysis. Springer Berlin Heidelberg, 1978: 105-116.</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>[1]Hartley R, Zisserman A. Multiple view geometry in computer vision[M]. Cambridge university press, 2003.<br>中文版：计算机视觉中的多视图几何<br>[2]Steger C, Ulrich M, Wiedemann C. Machine vision algorithms and applications[J]. Illumination, 2008, 5(2.1): 1.<br>中文版：机器视觉算法与应用<br>[3]Bradski G, Kaehler A. Learning OpenCV: Computer vision with the OpenCV library[M]. “ O’Reilly Media, Inc.”, 2008.<br>中文版：学习OpenCV<br>[4]Zhang Z. A flexible new technique for camera calibration[J]. IEEE Transactions on pattern analysis and machine intelligence, 2000, 22(11): 1330-1334.<br>[5]Lenz R, Fritsch D. Accuracy of videometry with CCD sensors[J]. ISPRS Journal of Photogrammetry and Remote Sensing, 1990, 45(2): 90-110.<br>[6]Duane C B. Close-range camera calibration[J]. Photogramm. Eng, 1971, 37(8): 855-866.<br>[7]Moré J J. The Levenberg-Marquardt algorithm: implementation and theory[M]//Numerical analysis. Springer Berlin Heidelberg, 1978: 105-116.</p>
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -191,6 +188,14 @@
 	
 <nav class="article-nav clearfix">
  
+ <div class="prev" >
+ <a href="/2016/12/31/线阵相机标定/" title="线阵相机标定">
+  <strong>上一篇：</strong><br/>
+  <span>
+  线阵相机标定</span>
+</a>
+</div>
+
 
 <div class="next">
 <a href="/2016/08/18/findCirclesGrid源码分析/"  title="findCirclesGrid源码分析">
@@ -214,7 +219,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摄像机模型"><span class="toc-number">1.</span> <span class="toc-text">摄像机模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#针孔相机模型"><span class="toc-number">1.1.</span> <span class="toc-text">针孔相机模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#畸变模型"><span class="toc-number">1.2.</span> <span class="toc-text">畸变模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Division模型"><span class="toc-number">1.2.1.</span> <span class="toc-text">Division模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多项式模型"><span class="toc-number">1.2.2.</span> <span class="toc-text">多项式模型</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#径向畸变"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">径向畸变</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#切向畸变"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">切向畸变</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标定过程"><span class="toc-number">2.</span> <span class="toc-text">标定过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考文献"><span class="toc-number">3.</span> <span class="toc-text">参考文献</span></a></li></ol>
  
   </div>
 
@@ -265,15 +270,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -289,27 +302,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

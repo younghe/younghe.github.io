@@ -19,7 +19,7 @@
 <meta property="og:description" content="模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgoioygxj21kw0epgqu.jpg">
 <meta property="og:image" content="http://www.opencv.org.cn/opencvdoc/2.3.2/html/_images/Pyramids_Tutorial_Pyramid_Theory.png">
-<meta property="og:updated_time" content="2016-06-05T09:23:57.717Z">
+<meta property="og:updated_time" content="2017-03-19T11:08:01.470Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于NCC的模板匹配介绍及实现技术细节">
 <meta name="twitter:description" content="模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。">
@@ -110,14 +110,13 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#模板匹配简介"><span class="toc-number">1.</span> <span class="toc-text">模板匹配简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NCC算法实现"><span class="toc-number">2.</span> <span class="toc-text">NCC算法实现</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#快速傅里叶变换计算卷积"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">快速傅里叶变换计算卷积</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#图像金字塔"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">图像金字塔</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#旋转匹配"><span class="toc-number">2.0.0.3.</span> <span class="toc-text">旋转匹配</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#End"><span class="toc-number">2.0.0.4.</span> <span class="toc-text">End</span></a></li></ol></li></ol></li></ol></li></ol>
 		
 		</div>
 		
 		<p>模板匹配是机器视觉算法中非常重要的一项技术，文本介绍的是一种基于灰度值的匹配方法，参考了《机器视觉算法与应用》相关章节。重点讲解了其中匹配分数计算的原理及代码实现。</p>
 <a id="more"></a>
-<p>##1.模板匹配简介#</p>
-<p>模板匹配（Template Matching）是在目标图像中快速定位模板图像的一种技术，这种技术非常广泛的应用在实际的机器视觉应用当中。比如在各种的质量检测或者识别应用中定位参考目标的位置，如下面左图中在快递单中定位logo，右图中清点工件的个数：</p>
+<h2 id="模板匹配简介"><a href="#模板匹配简介" class="headerlink" title="模板匹配简介"></a>模板匹配简介</h2><p>模板匹配（Template Matching）是在目标图像中快速定位模板图像的一种技术，这种技术非常广泛的应用在实际的机器视觉应用当中。比如在各种的质量检测或者识别应用中定位参考目标的位置，如下面左图中在快递单中定位logo，右图中清点工件的个数：</p>
 <p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgoioygxj21kw0epgqu.jpg" width="100%"><br>    <br>    <small> 模板匹配实际应用 </small><br></p>
 
 
@@ -127,8 +126,8 @@
 <p>$$d_{f,t}^2(u,v)=\sum_{x,y}(f^2(x,y) - 2f(x,y)t(x-u,y-u) + t^2(x-u,y-v))$$</p>
 <p>其中 $\sum t^2(x-u,y-v)$ 是常量。如果式子$\sum f^2(x,y)$近似常量的话，剩下的cross correlation:<br>$$c(u,v) = \sum_{x,y}f(x,y)t(x-u,y-u)$$<br>就可以作为目标和模板的匹配度量。</p>
 <p>实际上$\sum f^2(x,y)$不会是常量，如果仅使用cross correlation作为度量会有问题。比如全白的图像的匹配值会比实际匹配目标的匹配值高，而且$c(u,v)$的值会受模板大小的影响，同时会对光线非常敏感。因此，需要对cross correlation进行归一化：<br>$$\gamma(u,v) = \frac{\sum_{x,y}[f(x,y)-\overline{f}_{u,v}][t(x-u,y-v)-\overline{t}]}{\sqrt{\sum_{x,y}[f(x,y)-\overline{f}_{u,v}]^2[t(x-u,y-v)-\overline{t}]^2}}$$<br>其中${ \overline{t} }$是模板图像的平均值，${ \overline{f}_{u,v} }$是搜索窗口图像的平均值。得到的这个匹配度量称为归一化相关系数（Normalized cross correlation）,它能够有效的避免上述问题，是一个非常实用的匹配度量。同时我们注意NCC度量的范围在[-1,1]。</p>
-<p>##2.NCC算法实现#<br>如果直接实现NCC算法，无疑会产生巨大的运算量。因此下面将会提到两种方法来提高匹配的性能。</p>
-<p>#####2.1快速傅里叶变换计算卷积#####<br>快速傅里叶变换在图像处理中的应用（目前我了解的）有两个：用来过滤图像，如过滤桌面的纹理，使得目标能够更好的被分割。另一个就是用来快速计算卷积。（关于傅里叶变换的相关实现以后细讲）</p>
+<h2 id="NCC算法实现"><a href="#NCC算法实现" class="headerlink" title="NCC算法实现"></a>NCC算法实现</h2><p>如果直接实现NCC算法，无疑会产生巨大的运算量。因此下面将会提到两种方法来提高匹配的性能。</p>
+<h5 id="快速傅里叶变换计算卷积"><a href="#快速傅里叶变换计算卷积" class="headerlink" title="快速傅里叶变换计算卷积"></a>快速傅里叶变换计算卷积</h5><p>快速傅里叶变换在图像处理中的应用（目前我了解的）有两个：用来过滤图像，如过滤桌面的纹理，使得目标能够更好的被分割。另一个就是用来快速计算卷积。（关于傅里叶变换的相关实现以后细讲）</p>
 <p>上述NCC度量公式可以展开后可以得到：<br>记$f’(x,y) \equiv f(x,y)-\overline{f}_{u,v}$</p>
 <p>$$ 分子 = \sum_{x,y}f’(x,y)t(x-u,y-v)$$</p>
 <p>$$ 分母 = \sqrt{\sum_{x,y}[t(x-u,y-v)-\overline{t}]^2[f^2(x,y)-\overline{f}_{u,v}^2]}$$<br>(推倒过程并不复杂，略去)</p>
@@ -246,10 +245,10 @@ for( i = 0; i &lt; result.rows; i++ )
         rrow[j] = (float)num;
     }
 }
-</code></pre><p>#####2.2 图像金字塔#####<br>即使采用了上述的方法优化性能，所需的计算量也是极大的，因为要在所有的图像位置全部计算出匹配度量。为了节约开销，可以构建图像金字塔。</p>
+</code></pre><h5 id="图像金字塔"><a href="#图像金字塔" class="headerlink" title="图像金字塔"></a>图像金字塔</h5><p>即使采用了上述的方法优化性能，所需的计算量也是极大的，因为要在所有的图像位置全部计算出匹配度量。为了节约开销，可以构建图像金字塔。</p>
 <p></p><p align="center"><br>    <img src="http://www.opencv.org.cn/opencvdoc/2.3.2/html/_images/Pyramids_Tutorial_Pyramid_Theory.png" width="30%"><br>    <br>    <small> 金字塔图像 </small><br></p><br>最底层（第0层）为原始图像，每往上一层，图像宽度高度缩小一倍，图像大小缩小4倍。<br>我们根据模板大小选择金字塔的层数，一般构造2~3层金字塔。<br>在金字塔的顶层，对所有的图像位置计算匹配度量。我们选择合适的阈值过滤匹配度量，对过滤后的图像选取局部最大值作为潜在的匹配点。然后根据潜在匹配点的位置，逐层向下搜索，在下面一层我们只需要在潜在匹配点一定范围进行搜索，一般来说10x10的范围已经十分足够了。<br>因此我们可以看到，假设金字塔构建了3层，那么大约计算量缩小了4x4x4=64倍。这是非常巨大的性能优化，可以说如果没有这一步的优化，NCC难以在实际中应用。当然这里的图像金字塔的方法也可以被其他方法替代。<br>同时，这个图像金字塔在其他的匹配中也可以应用到，比如基于边缘的模板匹配，基于彩色信息的模板匹配等等。这是一个非常使用的优化技术。<p></p>
-<p>#####2.3 旋转匹配#####<br>事实上，以上的介绍的模板匹配并没有考虑旋转目标的匹配。这实现起来会更加复杂点，感兴趣的读者可以尝试着自己实现，需要注意的是如果对模板进行360全方位进行旋转的话要考虑旋转后的模板会有“黑边”（这个就要考虑带掩膜的模板了）。同时和只考虑平移是类似的，只需要在金字塔最顶层进行全方位的比对（此时角度搜索的步长可以不用十分精细），然后对潜在匹配点在小角度范围搜索。</p>
-<p>#####2.4 End#####<br>NCC是基于图像灰度的一种匹配技术，在大部分情况下都可以适用。但是一定程度下还是会受光照不均匀影响，另外对于目标物体存在混乱，遮挡等情况匹配效果十分不理想。下面有机会的话会介绍基于边缘的模板匹配。</p>
+<h5 id="旋转匹配"><a href="#旋转匹配" class="headerlink" title="旋转匹配"></a>旋转匹配</h5><p>事实上，以上的介绍的模板匹配并没有考虑旋转目标的匹配。这实现起来会更加复杂点，感兴趣的读者可以尝试着自己实现，需要注意的是如果对模板进行360全方位进行旋转的话要考虑旋转后的模板会有“黑边”（这个就要考虑带掩膜的模板了）。同时和只考虑平移是类似的，只需要在金字塔最顶层进行全方位的比对（此时角度搜索的步长可以不用十分精细），然后对潜在匹配点在小角度范围搜索。</p>
+<h5 id="End"><a href="#End" class="headerlink" title="End"></a>End</h5><p>NCC是基于图像灰度的一种匹配技术，在大部分情况下都可以适用。但是一定程度下还是会受光照不均匀影响，另外对于目标物体存在混乱，遮挡等情况匹配效果十分不理想。下面有机会的话会介绍基于边缘的模板匹配。</p>
 <p>PS：本文适合有一定图像处理基础的人阅读，由于公式编辑实在麻烦，省去部分推倒过程。</p>
   
 	</div>
@@ -317,7 +316,7 @@ for( i = 0; i &lt; result.rows; i++ )
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#模板匹配简介"><span class="toc-number">1.</span> <span class="toc-text">模板匹配简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NCC算法实现"><span class="toc-number">2.</span> <span class="toc-text">NCC算法实现</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#快速傅里叶变换计算卷积"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">快速傅里叶变换计算卷积</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#图像金字塔"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">图像金字塔</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#旋转匹配"><span class="toc-number">2.0.0.3.</span> <span class="toc-text">旋转匹配</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#End"><span class="toc-number">2.0.0.4.</span> <span class="toc-text">End</span></a></li></ol></li></ol></li></ol></li></ol>
  
   </div>
 
@@ -368,15 +367,23 @@ for( i = 0; i &lt; result.rows; i++ )
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -392,27 +399,19 @@ for( i = 0; i &lt; result.rows; i++ )
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

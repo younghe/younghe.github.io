@@ -4,29 +4,25 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>Visual Studio 2013编译Tesseract 3.04 | YangHe&#39;s Blog</title>
+    <title>线阵相机标定 | YangHe&#39;s Blog</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="YangHe">
     
 
     
-    <meta name="description" content="去年时候使用了VS2008编译了Tesseract 3.02版本，主要是参考了一份官方文档，但是对于目前的最新版本并没有给出说明。
-本文主要参考了Paul Vorbach的How to build Tesseract 3.03 with Visual Studio 2013，在翻译的同时，加上自己的一些经验总结。">
+    <meta name="description" content="前面的文章介绍了面阵相机标定的模型。这里介绍下线阵相机标定的模型，以及求解该模型碰到的问题。在工业应用中，线阵相机具有高分辨率，测量精度好，抗干扰性强的优点，已经得到越来越广的应用。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Visual Studio 2013编译Tesseract 3.04">
-<meta property="og:url" content="http://www.yanghespace.com/2015/09/25/Visual Studio 2013编译Tesseract 3.04/index.html">
+<meta property="og:title" content="线阵相机标定">
+<meta property="og:url" content="http://www.yanghespace.com/2016/12/31/线阵相机标定/index.html">
 <meta property="og:site_name" content="YangHe's Blog">
-<meta property="og:description" content="去年时候使用了VS2008编译了Tesseract 3.02版本，主要是参考了一份官方文档，但是对于目前的最新版本并没有给出说明。
-本文主要参考了Paul Vorbach的How to build Tesseract 3.03 with Visual Studio 2013，在翻译的同时，加上自己的一些经验总结。">
-<meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgk9idgpj2064093t95.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgkfvvhkj206z09jabo.jpg">
-<meta property="og:updated_time" content="2017-03-19T11:10:44.411Z">
+<meta property="og:description" content="前面的文章介绍了面阵相机标定的模型。这里介绍下线阵相机标定的模型，以及求解该模型碰到的问题。在工业应用中，线阵相机具有高分辨率，测量精度好，抗干扰性强的优点，已经得到越来越广的应用。">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gy1fdsw4tc0szj209706o3ys.jpg">
+<meta property="og:updated_time" content="2017-03-19T22:50:07.572Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Visual Studio 2013编译Tesseract 3.04">
-<meta name="twitter:description" content="去年时候使用了VS2008编译了Tesseract 3.02版本，主要是参考了一份官方文档，但是对于目前的最新版本并没有给出说明。
-本文主要参考了Paul Vorbach的How to build Tesseract 3.03 with Visual Studio 2013，在翻译的同时，加上自己的一些经验总结。">
-<meta name="twitter:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgk9idgpj2064093t95.jpg">
+<meta name="twitter:title" content="线阵相机标定">
+<meta name="twitter:description" content="前面的文章介绍了面阵相机标定的模型。这里介绍下线阵相机标定的模型，以及求解该模型碰到的问题。在工业应用中，线阵相机具有高分辨率，测量精度好，抗干扰性强的优点，已经得到越来越广的应用。">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/8f4158c5gy1fdsw4tc0szj209706o3ys.jpg">
 
     
     <link rel="alternative" href="/atom.xml" title="YangHe&#39;s Blog" type="application/atom+xml">
@@ -97,14 +93,14 @@
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2015/09/25/Visual Studio 2013编译Tesseract 3.04/" title="Visual Studio 2013编译Tesseract 3.04" itemprop="url">Visual Studio 2013编译Tesseract 3.04</a>
+      <a href="/2016/12/31/线阵相机标定/" title="线阵相机标定" itemprop="url">线阵相机标定</a>
   </h1>
   <p class="article-author">By
        
 		<a href="/about" title="YangHe" target="_blank" itemprop="author">YangHe</a>
 		
   <p class="article-time">
-    <time datetime="2015-09-25T15:38:38.000Z" itemprop="datePublished"> 发表于 2015-09-25</time>
+    <time datetime="2016-12-31T15:10:36.000Z" itemprop="datePublished"> 发表于 2016-12-31</time>
     
   </p>
 </header>
@@ -113,44 +109,33 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前序工作"><span class="toc-number">1.</span> <span class="toc-text">前序工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译Leptonica-1-71"><span class="toc-number">2.</span> <span class="toc-text">编译Leptonica 1.71</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译Tesseract"><span class="toc-number">3.</span> <span class="toc-text">编译Tesseract</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#End"><span class="toc-number">4.</span> <span class="toc-text">End</span></a></li></ol>
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摄像机模型"><span class="toc-number">1.</span> <span class="toc-text">摄像机模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考资料"><span class="toc-number">2.</span> <span class="toc-text">参考资料</span></a></li></ol>
 		
 		</div>
 		
-		<p>去年时候使用了VS2008编译了Tesseract 3.02版本，主要是参考了一份<a href="https://tesseract-ocr.googlecode.com/svn/trunk/vs2008/doc/setup.html" target="_blank" rel="external">官方文档</a>，但是对于目前的最新版本并没有给出说明。</p>
-<p>本文主要参考了Paul Vorbach的<a href="http://vorba.ch/2014/tesseract-3.03-vs2013.html" target="_blank" rel="external">How to build Tesseract 3.03 with Visual Studio 2013</a>，在翻译的同时，加上自己的一些经验总结。</p>
+		<p>前面的文章介绍了面阵相机标定的模型。这里介绍下线阵相机标定的模型，以及求解该模型碰到的问题。在工业应用中，线阵相机具有高分辨率，测量精度好，抗干扰性强的优点，已经得到越来越广的应用。</p>
 <a id="more"></a>
-<p>编译新版本最大问题在于新版本的Tesseract依赖新版的Leptonica库，后者是一个开源的C语言图像处理包。新版本的Leptonica需要新版的zlib,libpng,libtiff,libjepg和giflib这些库。在Leptonica的官网上只给出了Leptonica 1.68版本的VS2008编译工程（果然还是要掌握点Linux下的开发技巧:D）。那么你需要做的就是需要把新版的Leptonica编译成需要的lib文件及dll提供Tesseract调用，这无疑是一份枯燥繁琐的事。</p>
-<p>很幸运的是在GitHub上已经有一个Visual Studio的工程文件包含了所有Tesseract 3.03依赖的文件。<a href="https://github.com/charlesw/tesseract-vs2012" target="_blank" rel="external">charlesw/tesseract-vs2012</a>。这个工程Paul编译后发现了一些错误，然后又fork了一份：<a href="https://github.com/tesseract4java/tesseract-vs2013" target="_blank" rel="external">tesseract-vs2013</a>。</p>
-<p>下面是使用Visual Studio 2013编译Tesseract 3.04的所有步骤。</p>
-<h2 id="前序工作"><a href="#前序工作" class="headerlink" title="前序工作"></a>前序工作</h2><p>1.安装<a href="https://git-scm.com/" target="_blank" rel="external">Git</a>。(实际上你可以根据自己习惯直接从GitHub网页上下载源码)。<br>2.安装SVN，比如<a href="http://www.sliksvn.com/en/download" target="_blank" rel="external">SlickSVN</a><br>3.安装<a href="https://www.visualstudio.com/downloads/download-visual-studio-vs" target="_blank" rel="external">Visual Studio 2013 for Windows Desktop</a>。</p>
-<h2 id="编译Leptonica-1-71"><a href="#编译Leptonica-1-71" class="headerlink" title="编译Leptonica 1.71"></a>编译Leptonica 1.71</h2><p>1.创建用来编译Tesseract的目录。这里我们假设是<code>C:\Tesseract-Build\</code>.</p>
-<p>2.打开cmd命令，改变路径：<br><code>cd \Tesseract-Build\</code></p>
-<p>3.从GitHub上拷贝依赖文件到当前目录：<br><code>git clone git://github.com/pvorb/tesseract-vs2013.git</code></p>
-<p>4.打开tesseract-vs2013目录下的工程文件进行编译，注意需要在DLL_Ddebug, DLL_Release, LIB_Debug, LIB_Release每个Solution Configuration下都Build一次。这样编译后得到的lib和dll就是Tesseract所依赖的文件了。</p>
-<h2 id="编译Tesseract"><a href="#编译Tesseract" class="headerlink" title="编译Tesseract"></a>编译Tesseract</h2><p>1.确保当前路径仍然是<code>C:\Tesseract-Build\</code>。</p>
-<p>2.从SVN上获取最新版Tesseract源码：<br><code>svn checkout <a href="http://tesseract-ocr.googlecode.com/svn/trunk/" target="_blank" rel="external">http://tesseract-ocr.googlecode.com/svn/trunk/</a> tesseract-ocr</code></p>
-<p>3.把路径改成新检出的源码下：<br><code>cd tesseract-ocr</code></p>
-<p>4.利用tesseract-vs2013目录下的patch文件：<br><code>svn patch ..\tesseract-vs2013\vs2013+64bit_support.patch</code></p>
-<p>到这里如果都没有问题，那真的要恭喜你！事实上你极有可能在步骤2利用svn导入源码时候就出错了，这时候你首先要感谢下政府，然后你可以从GitHub上直接下载源码包（Tesseract工程已经转移到GitHub上了），得到源码把它拷贝在<code>tesseract-ocr</code>目录下。由于你不是从SVN上导入，所以步骤4就会报错。这时候你就需要手动配置依赖文件，具体过程是这样的：</p>
-<p>1）在<code>Tesseract-Build</code>目录下创建<code>include</code><code>lib</code>文件夹，在<code>include</code>文件夹拷贝<code>C:\Tesseract-Build\tesseract-vs2013</code>目录下的一些头文件，包括所有Leptonica的头文件及部分其他库的头文件：<br><img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgk9idgpj2064093t95.jpg" alt=""></p>
-<p>2）将上面步骤编译得到的lib文件及dll文件拷贝到<code>lib</code>目录下：<br><img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgkfvvhkj206z09jabo.jpg" alt=""></p>
-<p>3）用VS2013打开<code>C:\Tesseract-Build\tesseract\vs2010</code>目录下的工程，就能够成功编译。如果出现error C2146的错误，需要选择vs2013的菜单“File – Advanced Save Options”中设置Encoding为Chinese Simplified，保存后重新编译。</p>
-<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>这个月啥都没写，姑且拿这个凑个数吧。</p>
+<h2 id="摄像机模型"><a href="#摄像机模型" class="headerlink" title="摄像机模型"></a>摄像机模型</h2><p>线阵相机将3维空间投影到1D直线，必须与被拍摄物体之间有相对移动才能够拍摄得到一幅有用的图像。这里只考虑摄像机相对于目标物体匀速直线运动，并且采集所有图像过程中摄像机状态相同。假设摄像机固定，物体的运动向量$-V = -(v_x, v_y, v_z)$。</p>
+<p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gy1fdsw4tc0szj209706o3ys.jpg"><br>    <br>    <small> <strong>线阵摄像机拍摄原理</strong>. </small><br></p>
+
+<p>以摄像机的主点作为原点，z轴与光轴一致，并且使目标物体的z坐标为正。设置y轴的方向使得$v_y$为正，x轴垂直于y,z轴形成的平面。在采图的过程中，摄像机坐标系相对于物体发生移动，也就是说拍摄每行的摄像机位置都不同。这就意味着每行都对应一个不同的位姿。我们可以利用摄像机的运动是线性的这个条件，只要知道拍摄第一行的图像时摄像机坐标系之间的变换关系，随后各行都可以通过运动向量求得。</p>
+<p>接下来，我们考虑3维空间到2维图像上的变换关系。<br>由于物体相对摄像机移动，我们考虑$t=0$的时刻，即图像开始采集第一行。将物体的世界坐标转换到摄像机坐标系当中：<br>$$<br>  \begin{pmatrix} x_c \\  y_c \\  z_c \\  \end{pmatrix} =<br>  \left[<br>    \begin{array}{c|c}<br>      R &amp; T<br>    \end{array}<br>    \right]<br>  \begin{pmatrix} X_w \\  Y_w \\  Z_w \\ 1 \\ \end{pmatrix}<br>  \tag{1}<br>$$</p>
+<p>接下来考虑将$P_c = (x_c, y_c, z_c)$映射到图像坐标系上，在摄像机坐标系中，我们再考虑运动向量$V$。</p>
+<p>对于一维的情况，$t=0$时，点$(x_c, y_c, z_c)$映射到图像上$(u, 0)$位置。在x轴方向上，针孔摄像机的模型依然适用，$u = f_x\frac{x}{z} + c_x$，这里$f_x = fs_x$，$f$为焦距，$s_x$为缩放因子，将世界单位转化为像素单位。用矩阵形式表示为：<br>$$<br>  \begin{pmatrix} wu \\  w \\ \end{pmatrix} =<br>  \begin{pmatrix} f_x &amp; c_x \\ 0 &amp; 1 \\ \end{pmatrix}<br>  \begin{pmatrix} x_c \\  z_c \\ \end{pmatrix}<br>  \tag{2}<br>$$</p>
+<p>对任意$t$时刻的目标坐标为$P_c(t)=(x_c(t), y_c(t), z_c(t))$，该点的投影关系可以表达为：<br>$$<br>  \begin{pmatrix} wu \\ v \\ w \\ \end{pmatrix} =<br>  \begin{pmatrix} f_x &amp; 0 &amp; c_x \\ 0 &amp; s_y &amp; c_y \\ 0 &amp; 0 &amp; 1 \\ \end{pmatrix}<br>  \begin{pmatrix} x_c(t) \\ y_c(t) \\  z_c(t) \\ \end{pmatrix}<br>  \tag{3}<br>$$<br>其中，$s_y$为y轴方向缩放因子，将世界坐标转化为像素坐标，$s_y$的值不能被标定，只能设置为线阵图像传感器垂直方向上单位长度的像素个数。$c_y$为y方向上可能存在的偏移。</p>
+<p>考虑点$P_c(t)$, 速度设定为$-V$，因此：<br>$$P_c(t) = P_c - tV = (x_c, y_c, z_c)^T - t(v_x, v_y, v_z)$$<br>写成矩阵形式有：<br>$$<br>  \begin{pmatrix} x_c(t) \\ y_c(t) \\ z_c(t) \\ \end{pmatrix} =<br>  \begin{pmatrix} 1 &amp; -v_x/v_y &amp; 0 \\ 0 &amp; 1/v_y &amp; 0 \\ 0 &amp; -v_z/v_y &amp; 1 \\ \end{pmatrix}<br>  \begin{pmatrix} x_c \\ y_c \\  z_c \\ \end{pmatrix}<br>  \tag{4}<br>$$</p>
+<p>合并上述(1),(3),(4)：<br>$$<br>  \begin{pmatrix} wu \\ v \\ w \\ \end{pmatrix} =<br>  \begin{pmatrix} f_x &amp; 0 &amp; c_x \\ 0 &amp; s_y &amp; c_y \\ 0 &amp; 0 &amp; 1 \\ \end{pmatrix}<br>  \begin{pmatrix} 1 &amp; -v_x/v_y &amp; 0 \\ 0 &amp; 1/v_y &amp; 0 \\ 0 &amp; -v_z/v_y &amp; 1 \\ \end{pmatrix}<br>  \left[<br>    \begin{array}{c|c}<br>      R &amp; T<br>    \end{array}<br>    \right]<br>  \begin{pmatrix} X_w \\  Y_w \\  Z_w \\ 1 \\ \end{pmatrix}<br>  \\= M(x, y, z, 1)^T<br>  \tag{5}<br>$$</p>
+<p>式子(7)和面阵相机标定的式子:$(wu, wv, w)^T = M(x, y, z, 1)^T$，最大的差别在于$v$前面的系数$w$没有了，$M$不再是一个单应矩阵。线阵相机采图可以看成在x方向上透视投影，在y方向上正交投影。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>[1]Gupta, Rajiv, and Richard I. Hartley. “Linear pushbroom cameras.” IEEE transactions on pattern analysis and machine intelligence 19.9 (1997): 963-975.</p>
   
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
 
-<div class="article-categories">
-  <span></span>
-  <a class="article-category-link" href="/categories/开发环境搭建/">开发环境搭建</a>
-</div>
-
 
   <div class="article-tags">
   
-  <span></span> <a href="/tags/Tesseract-Build-VS2013/">Tesseract Build VS2013</a>
+  <span></span> <a href="/tags/相机标定/">相机标定</a>
   </div>
 
 </div>
@@ -159,7 +144,7 @@
 
 	<div class="article-share" id="share">
 	
-	  <div data-url="http://www.yanghespace.com/2015/09/25/Visual Studio 2013编译Tesseract 3.04/" data-title="Visual Studio 2013编译Tesseract 3.04 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
+	  <div data-url="http://www.yanghespace.com/2016/12/31/线阵相机标定/" data-title="线阵相机标定 | YangHe&#39;s Blog" data-tsina="null" class="share clearfix">
 	  </div>
 	
 	</div>
@@ -172,19 +157,11 @@
 	
 <nav class="article-nav clearfix">
  
- <div class="prev" >
- <a href="/2015/10/11/专利学习——Using Low Discrepancy Sequences to Match Template/" title="专利学习——Using Low Discrepancy Sequences to Match Template">
-  <strong>上一篇：</strong><br/>
-  <span>
-  专利学习——Using Low Discrepancy Sequences to Match Template</span>
-</a>
-</div>
-
 
 <div class="next">
-<a href="/2015/08/26/分水岭算法实现细节/"  title="分水岭算法实现细节">
+<a href="/2016/09/26/OpenCV相机标定原理及源码分析/"  title="OpenCV相机标定原理及源码分析">
  <strong>下一篇：</strong><br/> 
- <span>分水岭算法实现细节
+ <span>OpenCV相机标定原理及源码分析
 </span>
 </a>
 </div>
@@ -193,7 +170,7 @@
 
 	
 <section id="comments" class="comment">
-	<div class="ds-thread" data-thread-key="2015/09/25/Visual Studio 2013编译Tesseract 3.04/" data-title="Visual Studio 2013编译Tesseract 3.04" data-url="http://www.yanghespace.com/2015/09/25/Visual Studio 2013编译Tesseract 3.04/"></div>
+	<div class="ds-thread" data-thread-key="2016/12/31/线阵相机标定/" data-title="线阵相机标定" data-url="http://www.yanghespace.com/2016/12/31/线阵相机标定/"></div>
 </section>
 
 
@@ -203,7 +180,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前序工作"><span class="toc-number">1.</span> <span class="toc-text">前序工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译Leptonica-1-71"><span class="toc-number">2.</span> <span class="toc-text">编译Leptonica 1.71</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译Tesseract"><span class="toc-number">3.</span> <span class="toc-text">编译Tesseract</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#End"><span class="toc-number">4.</span> <span class="toc-text">End</span></a></li></ol>
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摄像机模型"><span class="toc-number">1.</span> <span class="toc-text">摄像机模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考资料"><span class="toc-number">2.</span> <span class="toc-text">参考资料</span></a></li></ol>
  
   </div>
 

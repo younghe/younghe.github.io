@@ -18,7 +18,7 @@
 <meta property="og:site_name" content="YangHe's Blog">
 <meta property="og:description" content="包含第三方库进行开发的时候，如果要跟踪第三方库的源码，通常情况下需要在同一个solution下面添加第三方库的工程。通过设置project dependency来进行调试第三方库。对于OpenCV如此庞大的工程来说，这种方法实在太不方便了。本文介绍OpenCV开发环境搭建的同时，说明了一种快速跟踪OpenCV源码的方法。">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kggvou1pj20gu0hugq9.jpg">
-<meta property="og:updated_time" content="2016-06-05T09:05:52.586Z">
+<meta property="og:updated_time" content="2017-03-19T11:04:41.983Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OpenCV源码调试跟踪">
 <meta name="twitter:description" content="包含第三方库进行开发的时候，如果要跟踪第三方库的源码，通常情况下需要在同一个solution下面添加第三方库的工程。通过设置project dependency来进行调试第三方库。对于OpenCV如此庞大的工程来说，这种方法实在太不方便了。本文介绍OpenCV开发环境搭建的同时，说明了一种快速跟踪OpenCV源码的方法。">
@@ -109,15 +109,15 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV-Visual-Studio开发环境搭建"><span class="toc-number">1.</span> <span class="toc-text">OpenCV + Visual Studio开发环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#需要提前下载安装的工具"><span class="toc-number">1.1.</span> <span class="toc-text">需要提前下载安装的工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#具体操作"><span class="toc-number">1.2.</span> <span class="toc-text">具体操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenCV源码跟踪"><span class="toc-number">1.3.</span> <span class="toc-text">OpenCV源码跟踪</span></a></li></ol></li></ol>
 		
 		</div>
 		
 		<p>包含第三方库进行开发的时候，如果要跟踪第三方库的源码，通常情况下需要在同一个solution下面添加第三方库的工程。通过设置project dependency来进行调试第三方库。对于OpenCV如此庞大的工程来说，这种方法实在太不方便了。本文介绍OpenCV开发环境搭建的同时，说明了一种快速跟踪OpenCV源码的方法。</p>
 <a id="more"></a>
-<p>##OpenCV + Visual Studio开发环境搭建<br>本文在Windows平台下搭建OpenCV开发环境，不限于OpenCV的版本以及Visual Studio的版本，此次演示的是OpenCV2.4.8+VS2008。</p>
-<p>###需要提前下载安装的工具<br>1.<a href="http://opencv.org/" target="_blank" rel="external">OpenCV源码</a>。<br>2.<a href="https://cmake.org/" target="_blank" rel="external">cmake-gui</a>。<br>3.Visual Studio.</p>
-<p>###具体操作<br>1.解压opencv2.4.8.exe到OpenCV2.4.8文件夹下，同时在OpenCV2.4.8文件夹下再创建一个文件夹命名为vs2008。<br>目录结构如下：<br>OpenCV2.4.8\build   【注：该文件夹包含了已经OpenCV头文件，以及已经编译好的不同平台下的opencv lib/dll文件】<br>OpenCV2.4.8\sources【注：该文件夹包含了OpenCV源码】<br>OpenCV2.4.8\vs2008 【注：用于存放生成的OpenCV工程文件】</p>
+<h2 id="OpenCV-Visual-Studio开发环境搭建"><a href="#OpenCV-Visual-Studio开发环境搭建" class="headerlink" title="OpenCV + Visual Studio开发环境搭建"></a>OpenCV + Visual Studio开发环境搭建</h2><p>本文在Windows平台下搭建OpenCV开发环境，不限于OpenCV的版本以及Visual Studio的版本，此次演示的是OpenCV2.4.8+VS2008。</p>
+<h3 id="需要提前下载安装的工具"><a href="#需要提前下载安装的工具" class="headerlink" title="需要提前下载安装的工具"></a>需要提前下载安装的工具</h3><p>1.<a href="http://opencv.org/" target="_blank" rel="external">OpenCV源码</a>。<br>2.<a href="https://cmake.org/" target="_blank" rel="external">cmake-gui</a>。<br>3.Visual Studio.</p>
+<h3 id="具体操作"><a href="#具体操作" class="headerlink" title="具体操作"></a>具体操作</h3><p>1.解压opencv2.4.8.exe到OpenCV2.4.8文件夹下，同时在OpenCV2.4.8文件夹下再创建一个文件夹命名为vs2008。<br>目录结构如下：<br>OpenCV2.4.8\build   【注：该文件夹包含了已经OpenCV头文件，以及已经编译好的不同平台下的opencv lib/dll文件】<br>OpenCV2.4.8\sources【注：该文件夹包含了OpenCV源码】<br>OpenCV2.4.8\vs2008 【注：用于存放生成的OpenCV工程文件】</p>
 <p>2.安装Windows版本的CMake。<br>打开CMake, 参考下图进行配置:</p>
 <p></p><p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kggvou1pj20gu0hugq9.jpg" width="60%"><br>    <br>    <small> Cmake GUI </small><br></p><br>1)将你自己OpenCV2.4.8\sources对应的路径添加到where is the source code，<br>将OpenCV2.4.8\vs2008对应的路径添加到where to build the binaries。<p></p>
 <p>2)第一次点击Configure, 会生成红色背景的编译配置信息。参数BUILD_SHARED_LIBS默认勾选，生成的是动态链接库工程。如果要编译lib, 请把钩去掉。</p>
@@ -127,7 +127,7 @@
 <p>3.用Visual Studio打开OpenCV.sln。在debug/release模式下分别编译OpenCV工程（如果编译出错请查看Error信息调试）。<br>debug模式生成的lib：<br>opencv_calib3d248d.lib<br>opencv_contrib248d.lib<br>opencv_core248d.lib<br>opencv_features2d248d.lib<br>opencv_flann248d.lib<br>opencv_gpu248d.lib<br>opencv_highgui248d.lib<br>opencv_imgproc248d.lib<br>opencv_legacy248d.lib<br>opencv_ml248d.lib<br>opencv_nonfree248d.lib<br>opencv_objdetect248d.lib<br>opencv_ocl248d.lib<br>opencv_photo248d.lib<br>opencv_stitching248d.lib<br>opencv_superres248d.lib<br>opencv_ts248d.lib<br>opencv_video248d.lib<br>opencv_videostab248d.lib<br>zlibd.lib<br>libtiffd.lib<br>libpngd.lib<br>libjpegd.lib<br>libjasperd.lib<br>IlmImfd.lib</p>
 <p>release模式生成的lib：<br>opencv_calib3d248.lib<br>opencv_contrib248.lib<br>opencv_core248.lib<br>opencv_features2d248.lib<br>opencv_flann248.lib<br>opencv_gpu248.lib<br>opencv_highgui248.lib<br>opencv_imgproc248.lib<br>opencv_legacy248.lib<br>opencv_ml248.lib<br>opencv_nonfree248.lib<br>opencv_objdetect248.lib<br>opencv_ocl248.lib<br>opencv_photo248.lib<br>opencv_stitching248.lib<br>opencv_superres248.lib<br>opencv_ts248.lib<br>opencv_video248.lib<br>opencv_videostab248.lib<br>zlib.lib<br>libtiff.lib<br>libpng.lib<br>libjpeg.lib<br>libjasper.lib<br>IlmImf.lib</p>
 <p>4.最后将编译好的opencv lib及头文件打包到你的第三方库路径。在你的工程property配置中添加如下依赖文件路径以及依赖的lib。</p>
-<p>###OpenCV源码跟踪<br>如上已经完成了OpenCV的配置，但是还没有讲到如何不用加载OpenCV工程进行OpenCV源码跟踪。事实上，Visual Studio Debug模式下调试代码可以准确定位到哪一行代码，是利用了*.pdb文件。这个文件保存了许多调试的信息。因此如果没有这个文件，理论上就没有办法准确跟踪调试源码。</p>
+<h3 id="OpenCV源码跟踪"><a href="#OpenCV源码跟踪" class="headerlink" title="OpenCV源码跟踪"></a>OpenCV源码跟踪</h3><p>如上已经完成了OpenCV的配置，但是还没有讲到如何不用加载OpenCV工程进行OpenCV源码跟踪。事实上，Visual Studio Debug模式下调试代码可以准确定位到哪一行代码，是利用了*.pdb文件。这个文件保存了许多调试的信息。因此如果没有这个文件，理论上就没有办法准确跟踪调试源码。</p>
 <p>所以这也正是通常情况下需要添加第三方库的工程一并调试的原因。然而，通过Vitual Studio编译OpenCV工程后，即使你新建的solution不包含OpenCV工程，只依赖了你编译过的lib文件，你也可以Step into到OpenCV源码当中（这个原因我也没有弄清楚，如果有谁知道缘由或者这里讲述有误，请不吝赐教）。</p>
 <p>最后要说的就是，如果你需要手动在你自己上编译OpenCV工程，然后调用自己生成的lib或者dll，就可以很方便的跟踪源码。</p>
   
@@ -196,7 +196,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV-Visual-Studio开发环境搭建"><span class="toc-number">1.</span> <span class="toc-text">OpenCV + Visual Studio开发环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#需要提前下载安装的工具"><span class="toc-number">1.1.</span> <span class="toc-text">需要提前下载安装的工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#具体操作"><span class="toc-number">1.2.</span> <span class="toc-text">具体操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenCV源码跟踪"><span class="toc-number">1.3.</span> <span class="toc-text">OpenCV源码跟踪</span></a></li></ol></li></ol>
  
   </div>
 
@@ -247,15 +247,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -271,27 +279,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

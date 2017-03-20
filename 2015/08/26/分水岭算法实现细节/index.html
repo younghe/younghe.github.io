@@ -22,7 +22,7 @@
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kglnfnk1j217v0go75g.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kglujxzdj217v0gomyv.jpg">
 <meta property="og:image" content="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgm3vjqkj20hs0dctgp.jpg">
-<meta property="og:updated_time" content="2016-06-05T09:12:15.313Z">
+<meta property="og:updated_time" content="2017-03-19T11:07:15.369Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分水岭算法实现细节">
 <meta name="twitter:description" content="本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。">
@@ -113,14 +113,14 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#分水岭分割简介"><span class="toc-number">1.</span> <span class="toc-text">分水岭分割简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vincent-Soille分水岭算法"><span class="toc-number">2.</span> <span class="toc-text">Vincent-Soille分水岭算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV分水岭算法"><span class="toc-number">3.</span> <span class="toc-text">OpenCV分水岭算法</span></a></li></ol>
 		
 		</div>
 		
 		<p>本文详细介绍了Vincent-Soille分水岭算法，并对OpenCV实现的分水岭算法源码进行了分析。</p>
 <a id="more"></a>
-<p>##1.分水岭分割简介#<br>在对处理后的图像进行数据分析之前，图像分割时最重要的步骤之一，其主要目的就是为了有效提取感兴趣的目标物体。这种分割可以是基于图像特征直方图，或者是基于边缘的分割，另外一种是基于区域的分割。分水岭算法就是一种基于区域的分割算法。<br>分水岭(watershed)和集水盆地(catchment basins)的概念在地形学中是人所共知的。分水线分开了每个积水盆地。我们可以将图像数据理解成地形表面，其中灰度值的大小就表示地貌的高度。因此，分水岭分割的过程可以大致上这么理解，在全图范围内降水，盆地部分慢慢被填满，当不同集水盆将要相互连通是，筑起水坝，水坝也就是分水线。当所有的区域都被水淹过后，分水岭也就都建完成了，整个算法结束。<br>上面的只是很笼统的介绍这个算法的思路，真正算法的实现还是有很多有意思的地方。</p>
-<p>##2.Vincent-Soille分水岭算法#<br>首先先来介绍一下Vincent-Soille的分水岭算法<br>[1]Vincent L. and Soille P. Watersheds in digital spaces: An efficient algorithm based on immersion simulations, 1991.<br>论文的前面大概表达了这么个意思：“这篇论文是迄今(1991)为止效率最高，精度最好的分水岭分割算法实现”。然后描述了前人的一些工作，还有哪些不足，本篇论文进行了一一改进云云。接下来作者才甩出大招————一段伪代码，全部的代码注释已经添加在伪代码旁边：</p>
+<h2 id="分水岭分割简介"><a href="#分水岭分割简介" class="headerlink" title="分水岭分割简介"></a>分水岭分割简介</h2><p>在对处理后的图像进行数据分析之前，图像分割时最重要的步骤之一，其主要目的就是为了有效提取感兴趣的目标物体。这种分割可以是基于图像特征直方图，或者是基于边缘的分割，另外一种是基于区域的分割。分水岭算法就是一种基于区域的分割算法。<br>分水岭(watershed)和集水盆地(catchment basins)的概念在地形学中是人所共知的。分水线分开了每个积水盆地。我们可以将图像数据理解成地形表面，其中灰度值的大小就表示地貌的高度。因此，分水岭分割的过程可以大致上这么理解，在全图范围内降水，盆地部分慢慢被填满，当不同集水盆将要相互连通是，筑起水坝，水坝也就是分水线。当所有的区域都被水淹过后，分水岭也就都建完成了，整个算法结束。<br>上面的只是很笼统的介绍这个算法的思路，真正算法的实现还是有很多有意思的地方。</p>
+<h2 id="Vincent-Soille分水岭算法"><a href="#Vincent-Soille分水岭算法" class="headerlink" title="Vincent-Soille分水岭算法"></a>Vincent-Soille分水岭算法</h2><p>首先先来介绍一下Vincent-Soille的分水岭算法<br>[1]Vincent L. and Soille P. Watersheds in digital spaces: An efficient algorithm based on immersion simulations, 1991.<br>论文的前面大概表达了这么个意思：“这篇论文是迄今(1991)为止效率最高，精度最好的分水岭分割算法实现”。然后描述了前人的一些工作，还有哪些不足，本篇论文进行了一一改进云云。接下来作者才甩出大招————一段伪代码，全部的代码注释已经添加在伪代码旁边：</p>
 <p align="center"><br>    <img src="http://ww1.sinaimg.cn/large/8f4158c5gw1f4kgnjftimj20o313jal4.jpg" width="60%"><br>    <br>    <small> 伪代码 </small><br></p><br>如果你按照这个伪代码原封不动的写完，算法已经实现了95%了。但是作者在论文并没有给出完全正确的代码，在关键性的步骤里面耍了几个花枪（十分恶劣）。以下给出代码运行结果<br><br><p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgldw5hkj217v0go0ux.jpg" width="60%"><br>    <br>    <small> 药片图像及其距离变换图像 </small><br></p>
 
 <p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kglnfnk1j217v0go75g.jpg" width="60%"><br>    <br>    <small> 论文代码直译后运行结果（8连通） </small><br></p>
@@ -129,8 +129,7 @@
 
 <p>上面的处理步骤先对原图二值化，然后计算距离变换图像，接着需要反转距离图像，最后运用分水岭算法进行分割。<br>在这里并不打算贴出修改后的源码，但是可以提示读者错误出在“设置水坝”的那一段代码中，有兴趣的可以找一找。</p>
 <p>上述的分水岭分割并不能直接对原图处理，一般来说都需要对原图进行二值化，然后计算它的距离变换图像再进行处理，即使这样，也是非常容易分割出一些细小的区域。下面介绍另外一种分水岭填充算法。</p>
-<p>##3.OpenCV分水岭算法#</p>
-<p>继续看下上面的例子，如果直接对原图使用分水岭分割算法会有什么结果呢————过分割现象，这也是分水岭算法的一大弊端：</p>
+<h2 id="OpenCV分水岭算法"><a href="#OpenCV分水岭算法" class="headerlink" title="OpenCV分水岭算法"></a>OpenCV分水岭算法</h2><p>继续看下上面的例子，如果直接对原图使用分水岭分割算法会有什么结果呢————过分割现象，这也是分水岭算法的一大弊端：</p>
 <p align="center"><br>    <img src="http://ww2.sinaimg.cn/large/8f4158c5gw1f4kgm3vjqkj20hs0dctgp.jpg" width="60%"><br>    <br>    <small> 过分割现象 </small><br></p>
 
 <p>在OpenCV中运行的watershed算法是参考<br>[2]F. Meyer.“Color image segmentation”1992的论文，很遗憾没有下载到该论文，不过从OpenCV的源码中可以基本了解到算法的原理。不过OpenCV中只支持彩色图像，下面的代码中修改成支持灰度图像：</p>
@@ -448,7 +447,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#分水岭分割简介"><span class="toc-number">1.</span> <span class="toc-text">分水岭分割简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vincent-Soille分水岭算法"><span class="toc-number">2.</span> <span class="toc-text">Vincent-Soille分水岭算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV分水岭算法"><span class="toc-number">3.</span> <span class="toc-text">OpenCV分水岭算法</span></a></li></ol>
  
   </div>
 
@@ -499,15 +498,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -523,27 +530,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>

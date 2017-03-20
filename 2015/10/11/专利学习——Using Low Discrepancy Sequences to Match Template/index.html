@@ -19,7 +19,7 @@
 <meta property="og:description" content="最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。">
 <meta property="og:image" content="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg">
 <meta property="og:image" content="http://ww3.sinaimg.cn/large/8f4158c5gw1f4kgrxvmr4j21bj254gxd.jpg">
-<meta property="og:updated_time" content="2016-06-05T09:16:35.248Z">
+<meta property="og:updated_time" content="2017-03-19T11:08:46.821Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="专利学习——Using Low Discrepancy Sequences to Match Template">
 <meta name="twitter:description" content="最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。">
@@ -110,25 +110,24 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目录</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要"><span class="toc-number">1.</span> <span class="toc-text">摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#背景介绍"><span class="toc-number">2.</span> <span class="toc-text">背景介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#算法实现"><span class="toc-number">3.</span> <span class="toc-text">算法实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#低差异序列-Low-Discrepancy-sequence-简介"><span class="toc-number">3.1.</span> <span class="toc-text">低差异序列(Low Discrepancy sequence)简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#旋转不变性采样点"><span class="toc-number">3.2.</span> <span class="toc-text">旋转不变性采样点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Coarse-to-fine-search旋转模板匹配"><span class="toc-number">3.3.</span> <span class="toc-text">Coarse to fine search旋转模板匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#End"><span class="toc-number">3.4.</span> <span class="toc-text">End</span></a></li></ol></li></ol>
 		
 		</div>
 		
 		<p>最近公司组织学习小组进行专利汇报讨论，为了避免其中一些好的想法在短期内没有实现，导致过后容易遗忘。因此开设“专利学习”系列对其中好的专利记录一二。</p>
 <a id="more"></a>
 <p>这是一篇NI的专利：<br>专利名称：Pattern matching system and method with improved template image sampling using low discrepancy sequences.<br>专利号：US6229921B1。</p>
-<p>##1.摘要<br>本篇专利提出了一种模板定位的方法。该方法首先使用低差异序列（Low Discrepancy sequence），也被称为拟随机序列（quasi-random sequence）来对图像进行采样，采样得到的一系列像素点用来精确描述模板。然后使用采样点来进行模板匹配过程。该方法同时对采样点进行了局部稳定性分析（a local stability analysis），以期得到更精确的结果。局部稳定性分析将采样点根据不同领域大小的稳定性分类，然后从高稳定性到低稳定性采样点进行模板匹配。同时该专利还选取根据旋转不变性采样点来进行旋转匹配，比如圆环采样。这种旋转不变性采样的模板匹配也可以使用局部稳定性进行coarse to fine搜索。</p>
-<p>##2.背景介绍<br>模板匹配的过程是为了确定在目标图像中模板的位姿，包括匹配质量，匹配位置、角度及缩放因子。一般的情况下将模板的像素与所有可能的位置进行比较，通常会使用一种归一化相关性系数的技术来计算是否匹配。这种方法在我另一篇文章：<a href="http://yanghespace.com/2015/08/09/%E5%9F%BA%E4%BA%8ENCC%E7%9A%84%E6%A8%A1%E6%9D%BF%E5%8C%B9%E9%85%8D%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%AE%9E%E7%8E%B0%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82/" target="_blank" rel="external">基于NCC的模板匹配介绍及实现技术细节</a>中有详细的描述，同时注意到在那片文章中使用了图像金字塔来减少匹配的时间消耗。由于归一化相关性系数的计算极为耗时，即使有了一些快速计算的优化方法提出，但是对于在整个图像中进行搜索的话，计算量就非常大，无法将其应用在实际生产中。那么在这篇专利中提出的方法是对模板进行采样，以此来大大减少搜索的时间消耗。</p>
-<p>##3.算法实现</p>
-<p>####3.1 低差异序列(Low Discrepancy sequence)简介<br>在具体介绍算法之前，需要对拟随机序列做一下<a href="https://zh.wikipedia.org/wiki/伪随机性" target="_blank" rel="external">简单的介绍</a>。先来谈下随机数的概念，真正的随机数必须使用专门的设备，比如热噪讯号、量子力学的效应、放射性元素的衰退辐射，或使用无法预测的现象，譬如用户按键盘的位置与速度、用户运动鼠标的路径坐标等来产生。在计算机中都是通过随机函数来生产随机序列，生成的随机序列称为伪随机数(Pseudo-random number)，常用的算法有<a href="https://zh.wikipedia.org/wiki/%E6%A2%85%E6%A3%AE%E6%97%8B%E8%BD%AC%E7%AE%97%E6%B3%95" target="_blank" rel="external">梅森旋转算法</a>。在统计学、蒙特·卡罗方法上使用的伪随机数也必须挑选周期极长、随机性够高的随机函数，以确保计算结果有足够的随机性。而<a href="https://zh.wikipedia.org/wiki/%E6%8B%9F%E8%92%99%E7%89%B9%E5%8D%A1%E7%BD%97%E6%96%B9%E6%B3%95" target="_blank" rel="external">拟蒙特卡洛方法</a>就是使用拟随机序列来代替伪随机序列进行计算。常用的低差异序列有Halton, Sobol, Faure和Niederreiter序列等。下图是伪随机序列和低差异序列的直观比较：</p>
-<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg" width="60%"><br>    <br>    <small>由伪随机数法(左)和低差异列(右，Sobol)法生成的256点序列（红点为第1至10点，蓝点为第11至100点，绿点为第101至256点） 直观上，低差异列的分布更为均匀 </small><br></p><br>从直观上我们可以看到低差异序列能产生更为均匀的序列，同时使用更少的点就能覆盖整个区域。另外，低差异序列的产生并不复杂，感兴趣的可以自行google。回到专利中，专利就是利用了低差异序列的良好性质，可以使用较少的点作为采样点来有效覆盖模板区域，使用采样点来代替整个图像。另外，低差异序列的生成工作也可以放在前期进行，这样可以减少匹配时额外的时间消耗。<br><br>####3.2局部稳定性分析(Local stability analysis)<br>假设现在我们已经通过Halton或者Sobol方法产生了一系列样本点，我们还不能直接使用这些样本点进行模板匹配。这里还有一个重要的工作就是对这些样本点进行局部稳定性分析，进行这个步骤的目的是为了将这些像素点根据稳定性进行分类。具体是这样操作的，对每个样本点计算它和模板图像中相邻像素的相关性。相关性越高意味着稳定性越高，也就是说该样本点周围的像素值和它相似。同时，计算时可以选择不同的领域大小，比如3,5,7,9。这样就可以根据领域的大小来对不同稳定性的样本进行分类。在分类之前，可能还需要过滤掉一些稳定程度小于预设领域大小的样本点。<br>最后我们会得到不同领域大小稳定性的样本点。需要注意的是我们需要把领域的大小记录下来，因为在匹配的过程中需要用到这些信息。<br><br>####3.3 Coarse-to-fine模板匹配<br>讲完上面两个比较重要的概念后，对于匹配过程，这里就只是大概描述一下。<br>得到不同领域大小稳定性的采样点后，首先对稳定性最大的采样点在整幅图像中进行模板匹配。在整幅图像中匹配时，不需要一个像素一个像素的进行，而是使用计算好的稳定性领域大小，比如以9 pixel的大小进行遍历。这就是局部稳定性分析真正的作用。<br>当我们得到一些潜在的匹配点后，为了得到准确的匹配位置，使用稳定性次高的采样点，在匹配点一定范围内使用当前的稳定性领域大小进行进一步匹配。以此类推，直到我们遍历完所有的采样点，然后对于最后的潜在匹配点使用整个模板图像进行匹配，来得到我们最终的结果。这样就完成了整个匹配过程。<br><br>下面这张流程图是对上面描述过程的总结：<br><p align="center"><br>    <img src="http://ww3.sinaimg.cn/large/8f4158c5gw1f4kgrxvmr4j21bj254gxd.jpg" width="60%"><br>    <br>    <small>流程图</small><br></p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本篇专利提出了一种模板定位的方法。该方法首先使用低差异序列（Low Discrepancy sequence），也被称为拟随机序列（quasi-random sequence）来对图像进行采样，采样得到的一系列像素点用来精确描述模板。然后使用采样点来进行模板匹配过程。该方法同时对采样点进行了局部稳定性分析（a local stability analysis），以期得到更精确的结果。局部稳定性分析将采样点根据不同领域大小的稳定性分类，然后从高稳定性到低稳定性采样点进行模板匹配。同时该专利还选取根据旋转不变性采样点来进行旋转匹配，比如圆环采样。这种旋转不变性采样的模板匹配也可以使用局部稳定性进行coarse to fine搜索。</p>
+<h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>模板匹配的过程是为了确定在目标图像中模板的位姿，包括匹配质量，匹配位置、角度及缩放因子。一般的情况下将模板的像素与所有可能的位置进行比较，通常会使用一种归一化相关性系数的技术来计算是否匹配。这种方法在我另一篇文章：<a href="http://yanghespace.com/2015/08/09/%E5%9F%BA%E4%BA%8ENCC%E7%9A%84%E6%A8%A1%E6%9D%BF%E5%8C%B9%E9%85%8D%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%AE%9E%E7%8E%B0%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82/" target="_blank" rel="external">基于NCC的模板匹配介绍及实现技术细节</a>中有详细的描述，同时注意到在那片文章中使用了图像金字塔来减少匹配的时间消耗。由于归一化相关性系数的计算极为耗时，即使有了一些快速计算的优化方法提出，但是对于在整个图像中进行搜索的话，计算量就非常大，无法将其应用在实际生产中。那么在这篇专利中提出的方法是对模板进行采样，以此来大大减少搜索的时间消耗。</p>
+<h2 id="算法实现"><a href="#算法实现" class="headerlink" title="算法实现"></a>算法实现</h2><h3 id="低差异序列-Low-Discrepancy-sequence-简介"><a href="#低差异序列-Low-Discrepancy-sequence-简介" class="headerlink" title="低差异序列(Low Discrepancy sequence)简介"></a>低差异序列(Low Discrepancy sequence)简介</h3><p>在具体介绍算法之前，需要对拟随机序列做一下<a href="https://zh.wikipedia.org/wiki/伪随机性" target="_blank" rel="external">简单的介绍</a>。先来谈下随机数的概念，真正的随机数必须使用专门的设备，比如热噪讯号、量子力学的效应、放射性元素的衰退辐射，或使用无法预测的现象，譬如用户按键盘的位置与速度、用户运动鼠标的路径坐标等来产生。在计算机中都是通过随机函数来生产随机序列，生成的随机序列称为伪随机数(Pseudo-random number)，常用的算法有<a href="https://zh.wikipedia.org/wiki/%E6%A2%85%E6%A3%AE%E6%97%8B%E8%BD%AC%E7%AE%97%E6%B3%95" target="_blank" rel="external">梅森旋转算法</a>。在统计学、蒙特·卡罗方法上使用的伪随机数也必须挑选周期极长、随机性够高的随机函数，以确保计算结果有足够的随机性。而<a href="https://zh.wikipedia.org/wiki/%E6%8B%9F%E8%92%99%E7%89%B9%E5%8D%A1%E7%BD%97%E6%96%B9%E6%B3%95" target="_blank" rel="external">拟蒙特卡洛方法</a>就是使用拟随机序列来代替伪随机序列进行计算。常用的低差异序列有Halton, Sobol, Faure和Niederreiter序列等。下图是伪随机序列和低差异序列的直观比较：</p>
+<p align="center"><br>    <img src="http://ww4.sinaimg.cn/large/8f4158c5gw1f4kgit294zj20xc0godiw.jpg" width="60%"><br>    <br>    <small>由伪随机数法(左)和低差异列(右，Sobol)法生成的256点序列（红点为第1至10点，蓝点为第11至100点，绿点为第101至256点） 直观上，低差异列的分布更为均匀 </small><br></p><br>从直观上我们可以看到低差异序列能产生更为均匀的序列，同时使用更少的点就能覆盖整个区域。另外，低差异序列的产生并不复杂，感兴趣的可以自行google。回到专利中，专利就是利用了低差异序列的良好性质，可以使用较少的点作为采样点来有效覆盖模板区域，使用采样点来代替整个图像。另外，低差异序列的生成工作也可以放在前期进行，这样可以减少匹配时额外的时间消耗。<br><br>### 局部稳定性分析(Local stability analysis)<br>假设现在我们已经通过Halton或者Sobol方法产生了一系列样本点，我们还不能直接使用这些样本点进行模板匹配。这里还有一个重要的工作就是对这些样本点进行局部稳定性分析，进行这个步骤的目的是为了将这些像素点根据稳定性进行分类。具体是这样操作的，对每个样本点计算它和模板图像中相邻像素的相关性。相关性越高意味着稳定性越高，也就是说该样本点周围的像素值和它相似。同时，计算时可以选择不同的领域大小，比如3,5,7,9。这样就可以根据领域的大小来对不同稳定性的样本进行分类。在分类之前，可能还需要过滤掉一些稳定程度小于预设领域大小的样本点。<br>最后我们会得到不同领域大小稳定性的样本点。需要注意的是我们需要把领域的大小记录下来，因为在匹配的过程中需要用到这些信息。<br><br>### Coarse-to-fine模板匹配<br>讲完上面两个比较重要的概念后，对于匹配过程，这里就只是大概描述一下。<br>得到不同领域大小稳定性的采样点后，首先对稳定性最大的采样点在整幅图像中进行模板匹配。在整幅图像中匹配时，不需要一个像素一个像素的进行，而是使用计算好的稳定性领域大小，比如以9 pixel的大小进行遍历。这就是局部稳定性分析真正的作用。<br>当我们得到一些潜在的匹配点后，为了得到准确的匹配位置，使用稳定性次高的采样点，在匹配点一定范围内使用当前的稳定性领域大小进行进一步匹配。以此类推，直到我们遍历完所有的采样点，然后对于最后的潜在匹配点使用整个模板图像进行匹配，来得到我们最终的结果。这样就完成了整个匹配过程。<br><br>下面这张流程图是对上面描述过程的总结：<br><p align="center"><br>    <img src="http://ww3.sinaimg.cn/large/8f4158c5gw1f4kgrxvmr4j21bj254gxd.jpg" width="60%"><br>    <br>    <small>流程图</small><br></p>
 
 <p>写到这里我觉得其实已经把这篇专利中最精华的部分讲了，但是还有一个问题没有解决，那就是对于旋转以及缩放的情况考虑进来。要知道，算法实现起来真正困难的地方一个是精度，另外一个就是加上旋转以及缩放的情况了。</p>
-<p>####3.4 旋转不变性采样点<br>专利中选用不互相重叠的圆，可以是同心圆或者是非同心圆来对模板图像进行采样。那么在匹配时如何确定旋转角度呢？通过将圆环序列的采样点逐个偏移，每次偏移都计算一次匹配结果，直到偏移又回到起始点。通过选取这个过程中最佳的匹配位置，就可以确定当前位置的旋转角度（这里还要注意一个问题，就是偏移一个像素旋转的角度是多少？这个直接影响到匹配的角度精度）。</p>
+<h3 id="旋转不变性采样点"><a href="#旋转不变性采样点" class="headerlink" title="旋转不变性采样点"></a>旋转不变性采样点</h3><p>专利中选用不互相重叠的圆，可以是同心圆或者是非同心圆来对模板图像进行采样。那么在匹配时如何确定旋转角度呢？通过将圆环序列的采样点逐个偏移，每次偏移都计算一次匹配结果，直到偏移又回到起始点。通过选取这个过程中最佳的匹配位置，就可以确定当前位置的旋转角度（这里还要注意一个问题，就是偏移一个像素旋转的角度是多少？这个直接影响到匹配的角度精度）。</p>
 <p>另外，这个过程也可以推广到缩放的情况，通过对圆环序列进行缩放（根据当前圆环的中心），对每次缩放的样本点进行匹配。更具体的做法是，在所有圆环中选取固定半径的圆环来进行缩放匹配。</p>
-<p>####3.5 Coarse to fine search旋转模板匹配<br>3.4中讨论的只是单个位置下考虑旋转的情况，现在我们要在整幅图像中考虑旋转，平移这两个因子。</p>
+<h3 id="Coarse-to-fine-search旋转模板匹配"><a href="#Coarse-to-fine-search旋转模板匹配" class="headerlink" title="Coarse to fine search旋转模板匹配"></a>Coarse to fine search旋转模板匹配</h3><p>3.4中讨论的只是单个位置下考虑旋转的情况，现在我们要在整幅图像中考虑旋转，平移这两个因子。</p>
 <p>同之前的处理类似，我们需要计算每个圆环的每个采样点的局部稳定性。这里我推测应该是将采样点以圆环为单位进行稳定性分类，做法同上。然后对稳定性最高的哪些圆环进行粗匹配，粗匹配包含的意思包括位置的粗匹配以及角度的粗匹配。可以想象，稳定性比较高的圆环极有可能是那些半径比较小的圆环。半径比较小，角度的精度也会相应较小（当然，我这种以圆环为单位进行样本分类的推测有待商榷）。粗匹配后，之后的过程与3.3中的方法类似，不再赘(zhui,–!)述。</p>
-<p>####3.6 End<br>算法讲起来容易，实现起来还是会碰到许多问题的，就像上面说的精度问题，旋转和缩放同时考虑的情形。<br>But i want to say:” Although talking is cheap, but sometimes useful”.</p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>算法讲起来容易，实现起来还是会碰到许多问题的，就像上面说的精度问题，旋转和缩放同时考虑的情形。<br>But i want to say:” Although talking is cheap, but sometimes useful”.</p>
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -195,7 +194,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目录</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要"><span class="toc-number">1.</span> <span class="toc-text">摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#背景介绍"><span class="toc-number">2.</span> <span class="toc-text">背景介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#算法实现"><span class="toc-number">3.</span> <span class="toc-text">算法实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#低差异序列-Low-Discrepancy-sequence-简介"><span class="toc-number">3.1.</span> <span class="toc-text">低差异序列(Low Discrepancy sequence)简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#旋转不变性采样点"><span class="toc-number">3.2.</span> <span class="toc-text">旋转不变性采样点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Coarse-to-fine-search旋转模板匹配"><span class="toc-number">3.3.</span> <span class="toc-text">Coarse to fine search旋转模板匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#End"><span class="toc-number">3.4.</span> <span class="toc-text">End</span></a></li></ol></li></ol>
  
   </div>
 
@@ -246,15 +245,23 @@
 			
 		
 			
+				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/模板匹配/" title="模板匹配">模板匹配<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/相机标定/" title="相机标定">相机标定<sup>1</sup></a></li>
+				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
 			
 		
 			
 				<li><a href="/tags/Tesseract-Build-VS2013/" title="Tesseract Build VS2013">Tesseract Build VS2013<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
 			
 		
 			
@@ -270,27 +277,19 @@
 			
 		
 			
-				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/OCR/" title="OCR">OCR<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/低差异序列/" title="低差异序列">低差异序列<sup>1</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/Tesseract/" title="Tesseract">Tesseract<sup>1</sup></a></li>
-			
-		
-			
 				<li><a href="/tags/图像分割/" title="图像分割">图像分割<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/分水岭/" title="分水岭">分水岭<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/归一化相关系数/" title="归一化相关系数">归一化相关系数<sup>1</sup></a></li>
 			
 		
 		</ul>
